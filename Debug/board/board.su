@@ -1,2 +1,0 @@
-/Users/tedd/dev/mcuxpresso/mcxa153/mcxa_p3t1755_test/utilities/fsl_debug_console.h:195:24:DbgConsole_Init	24	static
-../board/board.c:23:6:BOARD_InitDebugConsole	8	static
