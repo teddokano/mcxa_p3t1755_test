@@ -1,0 +1,5 @@
+/Users/tedd/dev/mcuxpresso/mcxa153/mcxa_p3t1755_test/drivers/fsl_clock.h:546:20:CLOCK_EnableClock	32	static
+/Users/tedd/dev/mcuxpresso/mcxa153/mcxa_p3t1755_test/drivers/fsl_reset.h:196:20:RESET_ReleasePeripheralReset	16	static
+/Users/tedd/dev/mcuxpresso/mcxa153/mcxa_p3t1755_test/drivers/fsl_port.h:355:20:PORT_SetPinConfig	32	static
+../board/pin_mux.c:40:6:BOARD_InitBootPins	8	static
+../board/pin_mux.c:71:6:BOARD_InitPins	32	static
