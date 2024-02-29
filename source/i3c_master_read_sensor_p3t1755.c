@@ -19,9 +19,9 @@
  ******************************************************************************/
 
 //#define	HIGHER_SCL_FREEQ
-#define	DEFAULT_COMM
+//#define	DEFAULT_COMM
 #define	TRY_IBI
-
+#define	REG_RW_BUFFER_SIZE			10
 //#define	BLOCKING_TRANSFER	//	Not supported in this version
 
 
@@ -69,8 +69,8 @@ static void i3c_master_callback(I3C_Type *base, i3c_master_handle_t *handle, sta
 #ifdef TRY_IBI
 uint8_t g_ibiBuff[10U];
 static uint8_t g_ibiUserBuff[10U];
-static uint8_t g_ibiUserBuffUsed            = 0;
-static volatile bool g_ibiWonFlag           = false;
+static uint8_t g_ibiUserBuffUsed	= 0;
+static volatile bool g_ibiWonFlag	= false;
 static uint8_t 	g_ibiAddress;
 #endif // TRY_IBI
 
@@ -122,8 +122,21 @@ status_t i3c_read( uint8_t targ, uint8_t *dp, int length, bool stop )
 	return i3c_xfer( kI3C_Read, kI3C_TypeI3CSdr, targ, dp, length, stop );
 }
 
+status_t i3c_reg_write( uint8_t targ, uint8_t reg, const uint8_t *dp, int length, bool stop )
+{
+	uint8_t	bp[ REG_RW_BUFFER_SIZE ];
+	
+	bp[ 0 ]	= reg;
+	memcpy( (uint8_t *)bp + 1, (uint8_t *)dp, length );
 
+	return i3c_write( targ, bp, length + 1, stop );
+}
 
+status_t i3c_reg_read( uint8_t targ, uint8_t reg, uint8_t *dp, int length, bool stop )
+{
+	i3c_write( targ, &reg, 1, false );
+	return i3c_read( targ, dp, length, stop );
+}
 
 status_t I3C_WriteSensor(uint8_t deviceAddress, uint32_t regAddress, uint8_t *regData, size_t dataSize)
 {
@@ -222,7 +235,8 @@ status_t I3C_ReadSensor(uint8_t deviceAddress, uint32_t regAddress, uint8_t *reg
 }
 
 
-status_t p3t1755_set_dynamic_address(void)
+//status_t p3t1755_set_dynamic_address( uint8_t old_addr, uint8_t new_addr )
+status_t p3t1755_set_dynamic_address( void )
 {
 	uint8_t	data	= CCC_RSTDAA;
 	i3c_write( 0x7E, &data, 1, true );
@@ -321,24 +335,29 @@ int main(void)
 #ifdef TRY_IBI
 	uint16_t	tmp;
 	uint8_t	config	= P3T1755_CONFIG_VALUE;
-	P3T1755_WriteReg( &p3t1755Handle, P3T1755_CONFIG_REG, &config, 1 );
-
+	
+	uint8_t	b[]	= { 0x01, 0x02 };
+	P3T1755_ReadReg(  &p3t1755Handle, P3T1755_CONFIG_REG, &config, sizeof( config ) );		
+//	i3c_write( SENSOR_ADDR, &b, sizeof( b ), true );
+i3c_reg_write( SENSOR_ADDR, P3T1755_CONFIG_REG, &config, sizeof( config ), true );
+	P3T1755_ReadReg(  &p3t1755Handle, P3T1755_CONFIG_REG, &config, sizeof( config ) );		
+	PRINTF( ">>>>>>> config:0x%02X\r\n", config );
+	
 	p3t1755_enable_IBI();
 
-	P3T1755_ReadReg( &p3t1755Handle, 0x00, (uint8_t *)&tmp, 2 );
+	i3c_reg_read( SENSOR_ADDR, 0x00, (uint8_t *)&tmp, sizeof( tmp ), true );
 	PRINTF( " Temp reg read value: 0x%04x\r\n", tmp );
 	
 	tmp	= (tmp & 0x00FF) + 1;	//	valid in little-endian system only
+	i3c_reg_write( SENSOR_ADDR, 0x02, (uint8_t *)&tmp, sizeof( tmp ), true );
 	
-	P3T1755_WriteReg( &p3t1755Handle, 0x02, (uint8_t *)&tmp,  2 );
-	
-	tmp	+= 1;	//	valid in little-endian system only
-	P3T1755_WriteReg( &p3t1755Handle, 0x03, (uint8_t *)&tmp, 2 );
+	tmp	+= 1;					//	valid in little-endian system only
+	i3c_reg_write( SENSOR_ADDR, 0x03, (uint8_t *)&tmp, sizeof( tmp ), true );
 
-	P3T1755_ReadReg( &p3t1755Handle, 0x02, (uint8_t *)&tmp, 2 );
+	i3c_reg_read( SENSOR_ADDR, 0x02, (uint8_t *)&tmp, sizeof( tmp ), true );
 	PRINTF( " LOW  0x%04x\r\n", tmp );	
 
-	P3T1755_ReadReg( &p3t1755Handle, 0x03, (uint8_t *)&tmp, 2 );
+	i3c_reg_read( SENSOR_ADDR, 0x03, (uint8_t *)&tmp, sizeof( tmp ), true );
 	PRINTF( " HIGH 0x%04x\r\n", tmp );
 
 #endif // TRY_IBI
