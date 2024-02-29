@@ -38,7 +38,8 @@
  ******************************************************************************/
 void		init_MCU( void );
 void		init_I3C( void );
-status_t	enable_IBI( uint8_t addr );
+float		read_temp( uint8_t targ, uint8_t reg );
+void		write_temp( uint8_t targ, uint8_t reg, float v );
 float		short2celsius( uint16_t v );
 uint16_t	celsius2short( float v );
 
@@ -61,7 +62,7 @@ int main(void)
 	i3c_change_target_address( P3T1755_ADDR_I2C, P3T1755_ADDR_I3C << 1 );
 
 #ifdef TRY_IBI
-	uint16_t	tmp;
+	float	temp;
 	uint8_t	config	= P3T1755_CONFIG_VALUE;
 	
 	i3c_reg_write( P3T1755_ADDR_I3C, P3T1755_REG_Conf, &config, sizeof( config ) );
@@ -70,20 +71,17 @@ int main(void)
 	
 	i3c_enable_IBI( P3T1755_ADDR_I3C );
 
-	i3c_reg_read( P3T1755_ADDR_I3C, P3T1755_REG_Temp, (uint8_t *)&tmp, sizeof( tmp ) );
-	PRINTF( " Temp reg read value: %8.4f\r\n", short2celsius( tmp ) );
+	temp	= read_temp( P3T1755_ADDR_I3C, P3T1755_REG_Temp );
+	PRINTF( " Temp reg read value: %8.4f\r\n", temp );
 	
-	tmp++;	//	valid in little-endian system only
-	i3c_reg_write( P3T1755_ADDR_I3C, P3T1755_REG_T_LOW, (uint8_t *)&tmp, sizeof( tmp ) );
+	write_temp( P3T1755_ADDR_I3C, P3T1755_REG_T_HIGH, temp + 2.0 );
+	write_temp( P3T1755_ADDR_I3C, P3T1755_REG_T_LOW,  temp + 1.0 );
+	
+	temp	= read_temp( P3T1755_ADDR_I3C, P3T1755_REG_T_HIGH );
+	PRINTF( " T_HIGH(0x03) = %8.4f\r\n", temp );
 
-	tmp++;	//	valid in little-endian system only
-	i3c_reg_write( P3T1755_ADDR_I3C, P3T1755_REG_T_HIGH, (uint8_t *)&tmp, sizeof( tmp ) );
-
-	i3c_reg_read( P3T1755_ADDR_I3C, P3T1755_REG_T_HIGH, (uint8_t *)&tmp, sizeof( tmp ) );
-	PRINTF( " T_HIGH(0x03) = %8.4f\r\n", short2celsius( tmp ) );
-
-	i3c_reg_read( P3T1755_ADDR_I3C, P3T1755_REG_T_LOW, (uint8_t *)&tmp, sizeof( tmp ) );
-	PRINTF( " T_LOW (0x02) = %8.4f\r\n", short2celsius( tmp ) );	
+	temp	= read_temp( P3T1755_ADDR_I3C, P3T1755_REG_T_LOW  );
+	PRINTF( " T_LOW (0x02) = %8.4f\r\n", temp );	
 
 	uint8_t	ibi_addr;
 	
@@ -97,22 +95,25 @@ int main(void)
 			PRINTF("*** IBI : Got IBI from target_address: 7’h%02X (0x%02X)\n", ibi_addr, ibi_addr << 1 );
 		}
 #endif // TRY_IBI
-		i3c_reg_read( P3T1755_ADDR_I3C, P3T1755_REG_Temp, &tmp, sizeof( tmp ) );
+		temp	= read_temp( P3T1755_ADDR_I3C, P3T1755_REG_Temp );
 
-		PRINTF( "Temperature: %8.4f \r\n", short2celsius( tmp ) );
+		PRINTF( "Temperature: %8.4f \r\n", temp );
 		SDK_DelayAtLeastUs(1000000, CLOCK_GetCoreSysClkFreq());
 	}
 }
 
-void init_MCU( void )
+float read_temp( uint8_t targ, uint8_t reg )
 {
-	/* Attach clock to I3C 24MHZ */
-	CLOCK_SetClockDiv(kCLOCK_DivI3C0_FCLK, 2U);
-	CLOCK_AttachClk(kFRO_HF_DIV_to_I3C0FCLK);
+	uint16_t	tmp;
+	i3c_reg_read( targ, reg, (uint8_t *)&tmp, sizeof( tmp ) );
+	
+	return short2celsius( tmp );
+}
 
-	BOARD_InitPins();
-	BOARD_BootClockFRO48M();
-	BOARD_InitDebugConsole();
+void write_temp( uint8_t targ, uint8_t reg, float v )
+{
+	uint16_t	tmp	= celsius2short( v );
+	i3c_reg_write( targ, reg, (uint8_t *)&tmp, sizeof( tmp ) );
 }
 
 float short2celsius( uint16_t v )
@@ -133,4 +134,15 @@ uint16_t celsius2short( float v )
 #else	
 	return (uint16_t)((tmp << 8) | (tmp >> 8));
 #endif
+}
+
+void init_MCU( void )
+{
+	/* Attach clock to I3C 24MHZ */
+	CLOCK_SetClockDiv(kCLOCK_DivI3C0_FCLK, 2U);
+	CLOCK_AttachClk(kFRO_HF_DIV_to_I3C0FCLK);
+
+	BOARD_InitPins();
+	BOARD_BootClockFRO48M();
+	BOARD_InitDebugConsole();
 }
