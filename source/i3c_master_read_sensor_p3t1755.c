@@ -337,11 +337,9 @@ int main(void)
 	uint8_t	config	= P3T1755_CONFIG_VALUE;
 	
 	uint8_t	b[]	= { 0x01, 0x02 };
-	P3T1755_ReadReg(  &p3t1755Handle, P3T1755_CONFIG_REG, &config, sizeof( config ) );		
-//	i3c_write( SENSOR_ADDR, &b, sizeof( b ), true );
-i3c_reg_write( SENSOR_ADDR, P3T1755_CONFIG_REG, &config, sizeof( config ), true );
-	P3T1755_ReadReg(  &p3t1755Handle, P3T1755_CONFIG_REG, &config, sizeof( config ) );		
-	PRINTF( ">>>>>>> config:0x%02X\r\n", config );
+	i3c_reg_write( SENSOR_ADDR, P3T1755_CONFIG_REG, &config, sizeof( config ), true );
+	i3c_reg_read(  SENSOR_ADDR, P3T1755_CONFIG_REG, &config, sizeof( config ), true );		
+	PRINTF( "config:0x%02X\r\n", config );
 	
 	p3t1755_enable_IBI();
 
@@ -374,15 +372,15 @@ i3c_reg_write( SENSOR_ADDR, P3T1755_CONFIG_REG, &config, sizeof( config ), true 
 
 #ifndef	DEFAULT_COMM
 		uint8_t	config;
-		P3T1755_ReadReg(  &p3t1755Handle, P3T1755_CONFIG_REG, &config, 1 );		
-		P3T1755_WriteReg( &p3t1755Handle, P3T1755_CONFIG_REG, &config, 1 );
+		i3c_reg_read(  SENSOR_ADDR, P3T1755_CONFIG_REG, &config, sizeof( config ), true );		
+		i3c_reg_write( SENSOR_ADDR, P3T1755_CONFIG_REG, &config, sizeof( config ), true );
 		
 		PRINTF( "config:0x%02X\r\n", config );
 #endif // DEFAULT_COMM
 
-		P3T1755_ReadTemperature( &p3t1755Handle, &temperature );
+		i3c_reg_read(  SENSOR_ADDR, 0x00, &tmp, sizeof( tmp ), true );		
 
-		PRINTF( "Temperature:%f \r\n", temperature );
+		PRINTF( "Temperature:%f \r\n", (float)(((tmp & 0x00FF) << 4) | ((tmp & 0xFF00) >> 12)) * 0.0625 );
 		SDK_DelayAtLeastUs(1000000, CLOCK_GetCoreSysClkFreq());
 	}
 }
