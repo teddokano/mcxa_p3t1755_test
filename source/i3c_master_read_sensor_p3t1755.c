@@ -68,17 +68,8 @@ int main(void)
 	i3c_reg_read(  P3T1755_ADDR_I3C, P3T1755_REG_Conf, &config, sizeof( config ) );
 	PRINTF( "config:0x%02X\r\n", config );
 	
-	enable_IBI( P3T1755_ADDR_I3C );
+	i3c_enable_IBI( P3T1755_ADDR_I3C );
 
-	
-	for ( uint16_t i = 40; i < 50; i++ )
-	{
-		uint16_t us	= celsius2short( (float)i / 2.0 );
-		float t	= short2celsius( us );
-		
-		PRINTF( "%2u, 0x%04X, %8.4f\r\n", i, us, t );		
-	}
-	
 	i3c_reg_read( P3T1755_ADDR_I3C, P3T1755_REG_Temp, (uint8_t *)&tmp, sizeof( tmp ) );
 	PRINTF( " Temp reg read value: %8.4f\r\n", short2celsius( tmp ) );
 	
@@ -101,7 +92,7 @@ int main(void)
 	while (1)
 	{
 #ifdef TRY_IBI
-		if ( (ibi_addr	= i3c_check_ibi()) )
+		if ( (ibi_addr	= i3c_check_IBI()) )
 		{
 			PRINTF("*** IBI : Got IBI from target_address: 7’h%02X (0x%02X)\n", ibi_addr, ibi_addr << 1 );
 		}
@@ -113,8 +104,6 @@ int main(void)
 	}
 }
 
-
-
 void init_MCU( void )
 {
 	/* Attach clock to I3C 24MHZ */
@@ -124,15 +113,6 @@ void init_MCU( void )
 	BOARD_InitPins();
 	BOARD_BootClockFRO48M();
 	BOARD_InitDebugConsole();
-}
-
-status_t enable_IBI( uint8_t addr )
-{
-	static const uint8_t	ccc		= CCC_ENEC;
-	static const uint8_t	set_int	= 0x01;
-
-	i3c_write( I3C_BROADCAST_ADDR, &ccc, 1, false );
-	i3c_write( addr, &set_int, 1, true  );
 }
 
 float short2celsius( uint16_t v )
@@ -154,4 +134,3 @@ uint16_t celsius2short( float v )
 	return (uint16_t)((tmp << 8) | (tmp >> 8));
 #endif
 }
-

@@ -104,7 +104,16 @@ void i3c_init( uint32_t i2c_freq, uint32_t i3c_od_freq, uint32_t i3c_pp_freq )
 	I3C_MasterTransferCreateHandle( EXAMPLE_MASTER, &g_i3c_m_handle, &masterCallback, NULL );
 }
 
-uint8_t	i3c_check_ibi( void )
+status_t i3c_enable_IBI( uint8_t addr )
+{
+	static const uint8_t	ccc		= CCC_ENEC;
+	static const uint8_t	set_int	= 0x01;
+
+	i3c_write( I3C_BROADCAST_ADDR, &ccc, 1, false );
+	i3c_write( addr, &set_int, 1, true  );
+}
+
+uint8_t	i3c_check_IBI( void )
 {
 	if ( !g_ibiWonFlag )
 		return 0;

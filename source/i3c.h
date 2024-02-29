@@ -14,5 +14,5 @@ status_t	i3c_read( uint8_t targ, uint8_t *dp, int length, bool stop );
 status_t	i3c_reg_write( uint8_t targ, uint8_t reg, const uint8_t *dp, int length );
 status_t	i3c_reg_read( uint8_t targ, uint8_t reg, uint8_t *dp, int length );
 status_t	i3c_change_target_address( uint8_t old_addr, uint8_t new_addr );
-
-uint8_t		i3c_check_ibi( void );
+status_t	i3c_enable_IBI( uint8_t addr );
+uint8_t		i3c_check_IBI( void );
