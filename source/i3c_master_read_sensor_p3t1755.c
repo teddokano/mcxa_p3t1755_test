@@ -107,16 +107,16 @@ void temp_sensor_reg_dump( uint8_t addr )
 	uint16_t	t, h, l;
 	uint8_t		c;
 	
-	i3c_reg_read( addr, P3T1755_REG_Temp,   &t, sizeof( t ) );
-	i3c_reg_read( addr, P3T1755_REG_Conf,   &c, sizeof( c ) );
-	i3c_reg_read( addr, P3T1755_REG_T_LOW,  &h, sizeof( h ) );
-	i3c_reg_read( addr, P3T1755_REG_T_HIGH, &l, sizeof( l ) );
+	i3c_reg_read( addr, P3T1755_REG_Temp,   (uint8_t *)&t, sizeof( t ) );
+	i3c_reg_read( addr, P3T1755_REG_Conf,              &c, sizeof( c ) );
+	i3c_reg_read( addr, P3T1755_REG_T_LOW,  (uint8_t *)&h, sizeof( h ) );
+	i3c_reg_read( addr, P3T1755_REG_T_HIGH, (uint8_t *)&l, sizeof( l ) );
 
 	PRINTF( "\r\n  P3T1755 (I3C target address:7’h%02X (0x%02X)) register dump\r\n", P3T1755_ADDR_I3C, P3T1755_ADDR_I3C << 1 );	
-	PRINTF( "  * Temp   (0x0): 0x%04X (%8.4f˚C)\r\n", swap_bytes( t ), short2celsius( t ) );	
-	PRINTF( "  * Conf   (0x1): 0x  %02X\r\n", c );	
-	PRINTF( "  * T_LOW  (0x2): 0x%04X (%8.4f˚C)\r\n", swap_bytes( l ), short2celsius( l ) );	
-	PRINTF( "  * T_HIGH (0x3): 0x%04X (%8.4f˚C)\r\n", swap_bytes( h ), short2celsius( h ) );	
+	PRINTF( "  - Temp   (0x0): 0x%04X (%8.4f˚C)\r\n", swap_bytes( t ), short2celsius( t ) );	
+	PRINTF( "  - Conf   (0x1): 0x  %02X\r\n", c );	
+	PRINTF( "  - T_LOW  (0x2): 0x%04X (%8.4f˚C)\r\n", swap_bytes( l ), short2celsius( l ) );	
+	PRINTF( "  - T_HIGH (0x3): 0x%04X (%8.4f˚C)\r\n", swap_bytes( h ), short2celsius( h ) );	
 	PRINTF( "\r\n" );	
 }
 

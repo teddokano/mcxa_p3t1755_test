@@ -52,7 +52,10 @@ status_t i3c_reg_read( uint8_t targ, uint8_t reg, uint8_t *dp, int length )
 
 status_t i3c_write( uint8_t targ, const uint8_t *dp, int length, bool stop )
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
 	return i3c_xfer( kI3C_Write, kI3C_TypeI3CSdr, targ, dp, length, stop );
+#pragma GCC diagnostic pop
 }
 
 status_t i3c_read( uint8_t targ, uint8_t *dp, int length, bool stop )
