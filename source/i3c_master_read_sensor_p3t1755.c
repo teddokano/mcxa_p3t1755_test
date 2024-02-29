@@ -65,7 +65,7 @@ static void i3c_master_ibi_callback(I3C_Type *base,
 
 static void i3c_master_callback(I3C_Type *base, i3c_master_handle_t *handle, status_t status, void *userData);
 status_t	change_target_address( uint8_t old_addr, uint8_t new_addr );
-status_t	p3t1755_enable_IBI( void );
+status_t	enable_IBI( uint8_t addr );
 void		init_MCU( void );
 void		init_I3C( void );
 float		short2celsius( uint16_t v );
@@ -74,16 +74,16 @@ float		short2celsius( uint16_t v );
  * Variables
  ******************************************************************************/
 #ifdef TRY_IBI
-uint8_t g_ibiBuff[10U];
-static uint8_t g_ibiUserBuff[10U];
-static uint8_t g_ibiUserBuffUsed	= 0;
-static volatile bool g_ibiWonFlag	= false;
-static uint8_t 	g_ibiAddress;
+uint8_t					g_ibiBuff[10U];
+static uint8_t			g_ibiUserBuff[10U];
+static uint8_t			g_ibiUserBuffUsed	= 0;
+static volatile bool	g_ibiWonFlag	= false;
+static uint8_t 			g_ibiAddress;
 #endif // TRY_IBI
 
-volatile status_t g_completionStatus;
-volatile bool g_masterCompletionFlag;
-i3c_master_handle_t g_i3c_m_handle;
+volatile status_t		g_completionStatus;
+volatile bool			g_masterCompletionFlag;
+i3c_master_handle_t		g_i3c_m_handle;
 
 #ifdef TRY_IBI
 const i3c_master_transfer_callback_t masterCallback = {
@@ -96,7 +96,7 @@ const i3c_master_transfer_callback_t masterCallback = {
 /*******************************************************************************
  * Code
  ******************************************************************************/
-static void i3c_master_callback(I3C_Type *base, i3c_master_handle_t *handle, status_t status, void *userData)
+static void i3c_master_callback( I3C_Type *base, i3c_master_handle_t *handle, status_t status, void *userData )
 {
 	if (status == kStatus_Success)
 		g_masterCompletionFlag = true;
@@ -129,13 +129,13 @@ static void i3c_master_ibi_callback( I3C_Type *base, i3c_master_handle_t *handle
 	}
 }
 
-status_t p3t1755_enable_IBI(void)
+status_t enable_IBI( uint8_t addr )
 {
 	static const uint8_t	ccc		= CCC_ENEC;
 	static const uint8_t	set_int	= 0x01;
 
 	i3c_write( I3C_BROADCAST_ADDR, &ccc, 1, false );
-	i3c_write( P3T1755_ADDR_I3C, &set_int, 1, true  );
+	i3c_write( addr, &set_int, 1, true  );
 }
 
 void init_MCU( void )
@@ -191,7 +191,7 @@ int main(void)
 	i3c_reg_read(  P3T1755_ADDR_I3C, P3T1755_REG_Conf, &config, sizeof( config ) );
 	PRINTF( "config:0x%02X\r\n", config );
 	
-	p3t1755_enable_IBI();
+	enable_IBI( P3T1755_ADDR_I3C );
 
 	i3c_reg_read( P3T1755_ADDR_I3C, P3T1755_REG_Temp, (uint8_t *)&tmp, sizeof( tmp ) );
 	PRINTF( " Temp reg read value: %8.4f\r\n", short2celsius( tmp ) );
