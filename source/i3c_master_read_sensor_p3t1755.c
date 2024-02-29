@@ -138,8 +138,7 @@ status_t i3c_reg_read( uint8_t targ, uint8_t reg, uint8_t *dp, int length, bool 
 	return i3c_read( targ, dp, length, stop );
 }
 
-//status_t p3t1755_set_dynamic_address( uint8_t old_addr, uint8_t new_addr )
-status_t p3t1755_set_dynamic_address( void )
+status_t change_target_address( uint8_t old_addr, uint8_t new_addr )
 {
 	uint8_t	data	= CCC_RSTDAA;
 	i3c_write( 0x7E, &data, 1, true );
@@ -147,8 +146,8 @@ status_t p3t1755_set_dynamic_address( void )
 	data	= CCC_SETDASA;
 	i3c_write( 0x7E, &data, 1, false );
 
-	data	= SENSOR_ADDR << 1;
-	i3c_write( SENSOR_SLAVE_ADDR, &data, 1, true );
+	data	= new_addr;
+	i3c_write( old_addr, &data, 1, true );
 }
 
 #ifdef TRY_IBI
@@ -219,16 +218,12 @@ void init_I3C( void )
  */
 int main(void)
 {
-	status_t result = kStatus_Success;
-	p3t1755_config_t p3t1755Config;
-	double temperature;
-
 	init_MCU();
 	init_I3C();
 	
 	PRINTF("\r\nI3C master read sensor data example.\r\n");
 
-	p3t1755_set_dynamic_address();
+	change_target_address( SENSOR_SLAVE_ADDR, SENSOR_ADDR << 1 );
 
 #ifdef TRY_IBI
 	uint16_t	tmp;
