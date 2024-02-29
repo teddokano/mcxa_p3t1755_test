@@ -8,7 +8,7 @@
 #include <string.h>
 /*  SDK Included Files */
 #include "fsl_debug_console.h"
-#include "fsl_p3t1755.h"
+//#include "fsl_p3t1755.h"
 #include "fsl_i3c.h"
 #include "pin_mux.h"
 #include "clock_config.h"
@@ -30,18 +30,6 @@
 #define EXAMPLE_I3C_PP_BAUDRATE		12500000
 #endif	//HIGHER_SCL_FREEQ
 
-#define EXAMPLE_MASTER				I3C0
-#define I3C_MASTER_CLOCK_FREQUENCY	CLOCK_GetI3CFClkFreq()
-#define SENSOR_SLAVE_ADDR			0x48U
-#define I3C_TIME_OUT_INDEX			100000000U
-
-#define SENSOR_ADDR					0x08U
-#define CCC_RSTDAA					0x06U
-#define CCC_SETDASA					0x87
-#define CCC_ENEC					0x80U
-
-#define P3T1755_CONFIG_VALUE		0x02
-
 #ifndef EXAMPLE_I2C_BAUDRATE
 #define EXAMPLE_I2C_BAUDRATE		400000
 #endif
@@ -51,6 +39,28 @@
 #ifndef EXAMPLE_I3C_PP_BAUDRATE
 #define EXAMPLE_I3C_PP_BAUDRATE		4000000
 #endif
+
+#define EXAMPLE_MASTER				I3C0
+#define I3C_MASTER_CLOCK_FREQUENCY	CLOCK_GetI3CFClkFreq()
+#define I3C_TIME_OUT_INDEX			100000000U
+
+#define I3C_BROADCAST_ADDR			0x07E
+
+#define CCC_RSTDAA					0x06U
+#define CCC_SETDASA					0x87U
+#define CCC_ENEC					0x80U
+
+#define P3T1755_ADDR_I2C			0x48U
+#define P3T1755_ADDR_I3C			0x08U
+#define P3T1755_CONFIG_VALUE		0x02
+
+enum	{
+	P3T1755_REG_Temp,
+	P3T1755_REG_Conf,
+	P3T1755_REG_T_LOW,
+	P3T1755_REG_T_HIGH,
+};
+
 
 /*******************************************************************************
  * Prototypes
@@ -77,7 +87,6 @@ static uint8_t 	g_ibiAddress;
 volatile status_t g_completionStatus;
 volatile bool g_masterCompletionFlag;
 i3c_master_handle_t g_i3c_m_handle;
-p3t1755_handle_t p3t1755Handle;
 
 #ifdef TRY_IBI
 const i3c_master_transfer_callback_t masterCallback = {
@@ -122,29 +131,29 @@ status_t i3c_read( uint8_t targ, uint8_t *dp, int length, bool stop )
 	return i3c_xfer( kI3C_Read, kI3C_TypeI3CSdr, targ, dp, length, stop );
 }
 
-status_t i3c_reg_write( uint8_t targ, uint8_t reg, const uint8_t *dp, int length, bool stop )
+status_t i3c_reg_write( uint8_t targ, uint8_t reg, const uint8_t *dp, int length )
 {
 	uint8_t	bp[ REG_RW_BUFFER_SIZE ];
 	
 	bp[ 0 ]	= reg;
 	memcpy( (uint8_t *)bp + 1, (uint8_t *)dp, length );
 
-	return i3c_write( targ, bp, length + 1, stop );
+	return i3c_write( targ, bp, length + 1, true );
 }
 
-status_t i3c_reg_read( uint8_t targ, uint8_t reg, uint8_t *dp, int length, bool stop )
+status_t i3c_reg_read( uint8_t targ, uint8_t reg, uint8_t *dp, int length )
 {
 	i3c_write( targ, &reg, 1, false );
-	return i3c_read( targ, dp, length, stop );
+	return i3c_read( targ, dp, length, true );
 }
 
 status_t change_target_address( uint8_t old_addr, uint8_t new_addr )
 {
 	uint8_t	data	= CCC_RSTDAA;
-	i3c_write( 0x7E, &data, 1, true );
+	i3c_write( I3C_BROADCAST_ADDR, &data, 1, true );
 
 	data	= CCC_SETDASA;
-	i3c_write( 0x7E, &data, 1, false );
+	i3c_write( I3C_BROADCAST_ADDR, &data, 1, false );
 
 	data	= new_addr;
 	i3c_write( old_addr, &data, 1, true );
@@ -181,8 +190,8 @@ status_t p3t1755_enable_IBI(void)
 	static const uint8_t	ccc		= CCC_ENEC;
 	static const uint8_t	set_int	= 0x01;
 
-	i3c_write( 0x7E, &ccc, 1, false );
-	i3c_write( SENSOR_ADDR, &set_int, 1, true  );
+	i3c_write( I3C_BROADCAST_ADDR, &ccc, 1, false );
+	i3c_write( P3T1755_ADDR_I3C, &set_int, 1, true  );
 }
 #endif // TRY_IBI
 
@@ -213,6 +222,11 @@ void init_I3C( void )
 	I3C_MasterTransferCreateHandle(EXAMPLE_MASTER, &g_i3c_m_handle, &masterCallback, NULL);
 }
 
+float short2celsius( uint16_t v )
+{
+	return (float)(((v & 0x00FF) << 4) | ((v & 0xFF00) >> 12)) * 0.0625;
+}
+
 /*!
  * @brief Main function
  */
@@ -223,34 +237,33 @@ int main(void)
 	
 	PRINTF("\r\nI3C master read sensor data example.\r\n");
 
-	change_target_address( SENSOR_SLAVE_ADDR, SENSOR_ADDR << 1 );
+	//	Try DAA
+	change_target_address( P3T1755_ADDR_I2C, P3T1755_ADDR_I3C << 1 );
 
 #ifdef TRY_IBI
 	uint16_t	tmp;
 	uint8_t	config	= P3T1755_CONFIG_VALUE;
 	
-	uint8_t	b[]	= { 0x01, 0x02 };
-	i3c_reg_write( SENSOR_ADDR, P3T1755_CONFIG_REG, &config, sizeof( config ), true );
-	i3c_reg_read(  SENSOR_ADDR, P3T1755_CONFIG_REG, &config, sizeof( config ), true );		
+	i3c_reg_write( P3T1755_ADDR_I3C, P3T1755_REG_Conf, &config, sizeof( config ) );
+	i3c_reg_read(  P3T1755_ADDR_I3C, P3T1755_REG_Conf, &config, sizeof( config ) );
 	PRINTF( "config:0x%02X\r\n", config );
 	
 	p3t1755_enable_IBI();
 
-	i3c_reg_read( SENSOR_ADDR, 0x00, (uint8_t *)&tmp, sizeof( tmp ), true );
-	PRINTF( " Temp reg read value: 0x%04x\r\n", tmp );
+	i3c_reg_read( P3T1755_ADDR_I3C, P3T1755_REG_Temp, (uint8_t *)&tmp, sizeof( tmp ) );
+	PRINTF( " Temp reg read value: %8.4f\r\n", short2celsius( tmp ) );
 	
-	tmp	= (tmp & 0x00FF) + 1;	//	valid in little-endian system only
-	i3c_reg_write( SENSOR_ADDR, 0x02, (uint8_t *)&tmp, sizeof( tmp ), true );
+	tmp++;	//	valid in little-endian system only
+	i3c_reg_write( P3T1755_ADDR_I3C, P3T1755_REG_T_HIGH, (uint8_t *)&tmp, sizeof( tmp ) );
+
+	tmp++;	//	valid in little-endian system only
+	i3c_reg_write( P3T1755_ADDR_I3C, P3T1755_REG_T_LOW, (uint8_t *)&tmp, sizeof( tmp ) );
 	
-	tmp	+= 1;					//	valid in little-endian system only
-	i3c_reg_write( SENSOR_ADDR, 0x03, (uint8_t *)&tmp, sizeof( tmp ), true );
+	i3c_reg_read( P3T1755_ADDR_I3C, P3T1755_REG_T_HIGH, (uint8_t *)&tmp, sizeof( tmp ) );
+	PRINTF( " T_HIGH(0x03) = %8.4f\r\n", short2celsius( tmp ) );
 
-	i3c_reg_read( SENSOR_ADDR, 0x02, (uint8_t *)&tmp, sizeof( tmp ), true );
-	PRINTF( " LOW  0x%04x\r\n", tmp );	
-
-	i3c_reg_read( SENSOR_ADDR, 0x03, (uint8_t *)&tmp, sizeof( tmp ), true );
-	PRINTF( " HIGH 0x%04x\r\n", tmp );
-
+	i3c_reg_read( P3T1755_ADDR_I3C, P3T1755_REG_T_LOW, (uint8_t *)&tmp, sizeof( tmp ) );
+	PRINTF( " T_LOW (0x02) = %8.4f\r\n", short2celsius( tmp ) );	
 #endif // TRY_IBI
 
 	while (1)
@@ -262,18 +275,9 @@ int main(void)
 			PRINTF("*** IBI : Got IBI from target_address: 7’h%02X (0x%02X)\n", g_ibiAddress, g_ibiAddress << 1 );
 		}
 #endif // TRY_IBI
+		i3c_reg_read( P3T1755_ADDR_I3C, P3T1755_REG_Temp, &tmp, sizeof( tmp ) );
 
-#ifndef	DEFAULT_COMM
-		uint8_t	config;
-		i3c_reg_read(  SENSOR_ADDR, P3T1755_CONFIG_REG, &config, sizeof( config ), true );		
-		i3c_reg_write( SENSOR_ADDR, P3T1755_CONFIG_REG, &config, sizeof( config ), true );
-		
-		PRINTF( "config:0x%02X\r\n", config );
-#endif // DEFAULT_COMM
-
-		i3c_reg_read(  SENSOR_ADDR, 0x00, &tmp, sizeof( tmp ), true );		
-
-		PRINTF( "Temperature:%f \r\n", (float)(((tmp & 0x00FF) << 4) | ((tmp & 0xFF00) >> 12)) * 0.0625 );
+		PRINTF( "Temperature: %8.4f \r\n", short2celsius( tmp ) );
 		SDK_DelayAtLeastUs(1000000, CLOCK_GetCoreSysClkFreq());
 	}
 }
