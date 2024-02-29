@@ -286,7 +286,7 @@
 								<option id="com.crt.advproject.link.gcc.lto.1000649653" name="Enable Link-time optimization (-flto)" superClass="com.crt.advproject.link.gcc.lto"/>
 								<option id="com.crt.advproject.link.gcc.lto.optmization.level.1836708269" name="Link-time optimization level" superClass="com.crt.advproject.link.gcc.lto.optmization.level"/>
 								<option id="com.crt.advproject.link.manage.1524288353" name="Manage linker script" superClass="com.crt.advproject.link.manage" value="true" valueType="boolean"/>
-								<option id="com.crt.advproject.link.script.1181257935" name="Linker script" superClass="com.crt.advproject.link.script" value="&quot;mcxa_p3t1755_test0_Debug.ld&quot;" valueType="string"/>
+								<option id="com.crt.advproject.link.script.1181257935" name="Linker script" superClass="com.crt.advproject.link.script" value="mcxa_p3t1755_test_Debug.ld" valueType="string"/>
 								<option id="com.crt.advproject.link.scriptdir.568747102" name="Script path" superClass="com.crt.advproject.link.scriptdir"/>
 								<option id="com.crt.advproject.link.crpenable.1107495727" name="Enable automatic placement of Code Read Protection field in image" superClass="com.crt.advproject.link.crpenable"/>
 								<option id="com.crt.advproject.link.flashconfigenable.662706353" name="Enable automatic placement of Flash Configuration field in image" superClass="com.crt.advproject.link.flashconfigenable" value="true" valueType="boolean"/>
@@ -521,7 +521,7 @@
 								<option id="com.crt.advproject.gas.config.1707078480" name="Obsolete (Config)" superClass="com.crt.advproject.gas.config"/>
 								<option id="com.crt.advproject.gas.store.189548358" name="Obsolete (Store)" superClass="com.crt.advproject.gas.store"/>
 								<option id="com.crt.advproject.gas.debug.1539186893" name="Debug level" superClass="com.crt.advproject.gas.debug"/>
-								<option id="com.crt.advproject.gas.option.debugging.other.1696026335" name="Other debugging flags" superClass="com.crt.advproject.gas.option.debugging.other"/>
+								<option id="com.crt.advproject.gas.option.debugging.other.1696026335" name="Other debugging flags" superClass="com.crt.advproject.gas.option.debugging.other" value="-gdwarf-4" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.2143445745" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 								<inputType id="com.crt.advproject.assembler.input.1083971934" name="Additional Assembly Source Files" superClass="com.crt.advproject.assembler.input"/>
 							</tool>
@@ -613,7 +613,7 @@
 								<option id="com.crt.advproject.link.gcc.lto.optmization.level.1873711048" name="Link-time optimization level" superClass="com.crt.advproject.link.gcc.lto.optmization.level"/>
 								<option id="com.crt.advproject.link.fpu.1021093278" name="Floating point" superClass="com.crt.advproject.link.fpu"/>
 								<option id="com.crt.advproject.link.manage.1464589593" name="Manage linker script" superClass="com.crt.advproject.link.manage" value="true" valueType="boolean"/>
-								<option id="com.crt.advproject.link.script.836278708" name="Linker script" superClass="com.crt.advproject.link.script" value="&quot;mcxa_p3t1755_test0_Release.ld&quot;" valueType="string"/>
+								<option id="com.crt.advproject.link.script.836278708" name="Linker script" superClass="com.crt.advproject.link.script" value="mcxa_p3t1755_test_Release.ld" valueType="string"/>
 								<option id="com.crt.advproject.link.scriptdir.811905708" name="Script path" superClass="com.crt.advproject.link.scriptdir"/>
 								<option id="com.crt.advproject.link.crpenable.1754101216" name="Enable automatic placement of Code Read Protection field in image" superClass="com.crt.advproject.link.crpenable"/>
 								<option id="com.crt.advproject.link.flashconfigenable.1639808185" name="Enable automatic placement of Flash Configuration field in image" superClass="com.crt.advproject.link.flashconfigenable" value="true" valueType="boolean"/>
