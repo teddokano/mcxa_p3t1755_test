@@ -72,7 +72,7 @@ int main(void)
 
 	float	temp;
 	temp	= temp_sensor_setting( P3T1755_ADDR_I3C, P3T1755_CONFIG_VALUE );
-	PRINTF( "  T_HIGH and T_LOW registers are set based on current temperature: %8.4f\r\n", temp );
+	PRINTF( "  T_HIGH and T_LOW registers are set based on current temperature: %8.4f˚C\r\n", temp );
 	
 	temp_sensor_reg_dump( P3T1755_ADDR_I3C );
 
