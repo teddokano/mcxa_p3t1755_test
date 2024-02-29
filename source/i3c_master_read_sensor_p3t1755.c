@@ -96,83 +96,7 @@ const i3c_master_transfer_callback_t masterCallback = {
 /*******************************************************************************
  * Code
  ******************************************************************************/
-static void i3c_master_callback( I3C_Type *base, i3c_master_handle_t *handle, status_t status, void *userData )
-{
-	if (status == kStatus_Success)
-		g_masterCompletionFlag = true;
 
-	g_completionStatus = status;
-}
-
-static void i3c_master_ibi_callback( I3C_Type *base, i3c_master_handle_t *handle, i3c_ibi_type_t ibiType, i3c_ibi_state_t ibiState )
-{
-	g_ibiWonFlag	= true;
-	g_ibiAddress	= handle->ibiAddress;
-	
-	switch ( ibiType )
-	{
-		case kI3C_IbiNormal:
-			if ( ibiState == kI3C_IbiDataBuffNeed )
-			{
-				handle->ibiBuff = g_ibiBuff;
-			}
-			else
-			{
-				memcpy( g_ibiUserBuff, (void *)handle->ibiBuff, handle->ibiPayloadSize );
-				g_ibiUserBuffUsed = handle->ibiPayloadSize;
-			}
-			break;
-
-		default:
-			assert(false);
-			break;
-	}
-}
-
-status_t enable_IBI( uint8_t addr )
-{
-	static const uint8_t	ccc		= CCC_ENEC;
-	static const uint8_t	set_int	= 0x01;
-
-	i3c_write( I3C_BROADCAST_ADDR, &ccc, 1, false );
-	i3c_write( addr, &set_int, 1, true  );
-}
-
-void init_MCU( void )
-{
-	/* Attach clock to I3C 24MHZ */
-	CLOCK_SetClockDiv(kCLOCK_DivI3C0_FCLK, 2U);
-	CLOCK_AttachClk(kFRO_HF_DIV_to_I3C0FCLK);
-
-	BOARD_InitPins();
-	BOARD_BootClockFRO48M();
-	BOARD_InitDebugConsole();
-}
-
-void init_I3C( void )
-{
-	i3c_master_config_t masterConfig;
-
-	I3C_MasterGetDefaultConfig(&masterConfig);
-	masterConfig.baudRate_Hz.i2cBaud          = EXAMPLE_I2C_BAUDRATE;
-	masterConfig.baudRate_Hz.i3cPushPullBaud  = EXAMPLE_I3C_PP_BAUDRATE;
-	masterConfig.baudRate_Hz.i3cOpenDrainBaud = EXAMPLE_I3C_OD_BAUDRATE;
-	masterConfig.enableOpenDrainStop          = false;
-	masterConfig.disableTimeout               = true;
-	I3C_MasterInit(EXAMPLE_MASTER, &masterConfig, I3C_MASTER_CLOCK_FREQUENCY);
-
-	/* Create I3C handle. */
-	I3C_MasterTransferCreateHandle(EXAMPLE_MASTER, &g_i3c_m_handle, &masterCallback, NULL);
-}
-
-float short2celsius( uint16_t v )
-{
-	return (float)(((v & 0x00FF) << 4) | ((v & 0xFF00) >> 12)) * 0.0625;
-}
-
-/*!
- * @brief Main function
- */
 int main(void)
 {
 	init_MCU();
@@ -224,3 +148,78 @@ int main(void)
 		SDK_DelayAtLeastUs(1000000, CLOCK_GetCoreSysClkFreq());
 	}
 }
+
+void init_MCU( void )
+{
+	/* Attach clock to I3C 24MHZ */
+	CLOCK_SetClockDiv(kCLOCK_DivI3C0_FCLK, 2U);
+	CLOCK_AttachClk(kFRO_HF_DIV_to_I3C0FCLK);
+
+	BOARD_InitPins();
+	BOARD_BootClockFRO48M();
+	BOARD_InitDebugConsole();
+}
+
+void init_I3C( void )
+{
+	i3c_master_config_t masterConfig;
+
+	I3C_MasterGetDefaultConfig(&masterConfig);
+	masterConfig.baudRate_Hz.i2cBaud          = EXAMPLE_I2C_BAUDRATE;
+	masterConfig.baudRate_Hz.i3cPushPullBaud  = EXAMPLE_I3C_PP_BAUDRATE;
+	masterConfig.baudRate_Hz.i3cOpenDrainBaud = EXAMPLE_I3C_OD_BAUDRATE;
+	masterConfig.enableOpenDrainStop          = false;
+	masterConfig.disableTimeout               = true;
+	I3C_MasterInit(EXAMPLE_MASTER, &masterConfig, I3C_MASTER_CLOCK_FREQUENCY);
+
+	/* Create I3C handle. */
+	I3C_MasterTransferCreateHandle(EXAMPLE_MASTER, &g_i3c_m_handle, &masterCallback, NULL);
+}
+
+status_t enable_IBI( uint8_t addr )
+{
+	static const uint8_t	ccc		= CCC_ENEC;
+	static const uint8_t	set_int	= 0x01;
+
+	i3c_write( I3C_BROADCAST_ADDR, &ccc, 1, false );
+	i3c_write( addr, &set_int, 1, true  );
+}
+
+float short2celsius( uint16_t v )
+{
+	return (float)(((v & 0x00FF) << 4) | ((v & 0xFF00) >> 12)) * 0.0625;
+}
+
+static void i3c_master_callback( I3C_Type *base, i3c_master_handle_t *handle, status_t status, void *userData )
+{
+	if (status == kStatus_Success)
+		g_masterCompletionFlag = true;
+
+	g_completionStatus = status;
+}
+
+static void i3c_master_ibi_callback( I3C_Type *base, i3c_master_handle_t *handle, i3c_ibi_type_t ibiType, i3c_ibi_state_t ibiState )
+{
+	g_ibiWonFlag	= true;
+	g_ibiAddress	= handle->ibiAddress;
+	
+	switch ( ibiType )
+	{
+		case kI3C_IbiNormal:
+			if ( ibiState == kI3C_IbiDataBuffNeed )
+			{
+				handle->ibiBuff = g_ibiBuff;
+			}
+			else
+			{
+				memcpy( g_ibiUserBuff, (void *)handle->ibiBuff, handle->ibiPayloadSize );
+				g_ibiUserBuffUsed = handle->ibiPayloadSize;
+			}
+			break;
+
+		default:
+			assert(false);
+			break;
+	}
+}
+
