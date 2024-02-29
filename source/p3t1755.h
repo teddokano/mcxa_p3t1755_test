@@ -1,3 +1,6 @@
+/*
+ * Copyright 2024 Tedd OKANO
+ */
 
 #define P3T1755_ADDR_I2C			0x48U
 #define P3T1755_ADDR_I3C			0x08U
