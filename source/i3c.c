@@ -1,10 +1,5 @@
-#include <string.h>
-#include "fsl_debug_console.h"
 #include "fsl_i3c.h"
 #include "i3c.h"
-#include "pin_mux.h"
-#include "clock_config.h"
-#include "board.h"
 
 #define	REG_RW_BUFFER_SIZE			10
 
@@ -48,7 +43,7 @@ status_t i3c_reg_read( uint8_t targ, uint8_t reg, uint8_t *dp, int length )
 	return i3c_read( targ, dp, length, true );
 }
 
-status_t change_target_address( uint8_t old_addr, uint8_t new_addr )
+status_t i3c_change_target_address( uint8_t old_addr, uint8_t new_addr )
 {
 	uint8_t	data	= CCC_RSTDAA;
 	i3c_write( I3C_BROADCAST_ADDR, &data, 1, true );
@@ -59,4 +54,3 @@ status_t change_target_address( uint8_t old_addr, uint8_t new_addr )
 	data	= new_addr;
 	i3c_write( old_addr, &data, 1, true );
 }
-

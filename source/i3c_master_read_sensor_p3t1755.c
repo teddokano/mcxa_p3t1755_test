@@ -9,66 +9,53 @@
 /*  SDK Included Files */
 #include "fsl_debug_console.h"
 #include "fsl_i3c.h"
-#include "i3c.h"
 #include "pin_mux.h"
 #include "clock_config.h"
 #include "board.h"
+
+#include "i3c.h"
+#include "p3t1755.h"
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
 
-//#define	HIGHER_SCL_FREEQ
-//#define	DEFAULT_COMM
+#define	HIGHER_SCL_FREEQ
 #define	TRY_IBI
-//#define	BLOCKING_TRANSFER	//	Not supported in this version
-
 
 #ifdef	HIGHER_SCL_FREEQ
 #define EXAMPLE_I3C_OD_BAUDRATE		4000000
 #define EXAMPLE_I3C_PP_BAUDRATE		12500000
-#endif	//HIGHER_SCL_FREEQ
-
-#ifndef EXAMPLE_I2C_BAUDRATE
-#define EXAMPLE_I2C_BAUDRATE		400000
-#endif
-#ifndef EXAMPLE_I3C_OD_BAUDRATE
+#else
 #define EXAMPLE_I3C_OD_BAUDRATE		1500000
-#endif
-#ifndef EXAMPLE_I3C_PP_BAUDRATE
 #define EXAMPLE_I3C_PP_BAUDRATE		4000000
-#endif
+#endif //HIGHER_SCL_FREEQ
+
+#define EXAMPLE_I2C_BAUDRATE		400000
 
 #define I3C_MASTER_CLOCK_FREQUENCY	CLOCK_GetI3CFClkFreq()
-
-#define P3T1755_ADDR_I2C			0x48U
-#define P3T1755_ADDR_I3C			0x08U
-#define P3T1755_CONFIG_VALUE		0x02
-
-enum	{
-	P3T1755_REG_Temp,
-	P3T1755_REG_Conf,
-	P3T1755_REG_T_LOW,
-	P3T1755_REG_T_HIGH,
-};
-
 
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
-#ifdef TRY_IBI
-static void i3c_master_ibi_callback(I3C_Type *base,
-									i3c_master_handle_t *handle,
-									i3c_ibi_type_t ibiType,
-									i3c_ibi_state_t ibiState);
-#endif // TRY_IBI
-
-static void i3c_master_callback(I3C_Type *base, i3c_master_handle_t *handle, status_t status, void *userData);
-status_t	change_target_address( uint8_t old_addr, uint8_t new_addr );
-status_t	enable_IBI( uint8_t addr );
 void		init_MCU( void );
 void		init_I3C( void );
+status_t	enable_IBI( uint8_t addr );
 float		short2celsius( uint16_t v );
+static void i3c_master_callback(	I3C_Type			*base, 
+									i3c_master_handle_t	*handle, 
+									status_t			status, 
+									void				*userData
+								);
+
+#ifdef TRY_IBI
+static void i3c_master_ibi_callback(	I3C_Type			*base, 
+										i3c_master_handle_t	*handle, 
+										i3c_ibi_type_t		ibiType, 
+										i3c_ibi_state_t		ibiState
+									);
+#endif // TRY_IBI
+
 
 /*******************************************************************************
  * Variables
@@ -87,10 +74,16 @@ i3c_master_handle_t		g_i3c_m_handle;
 
 #ifdef TRY_IBI
 const i3c_master_transfer_callback_t masterCallback = {
-	.slave2Master = NULL, .ibiCallback = i3c_master_ibi_callback, .transferComplete = i3c_master_callback};
+	.slave2Master		= NULL, 
+	.ibiCallback		= i3c_master_ibi_callback, 
+	.transferComplete	= i3c_master_callback
+};
 #else
 const i3c_master_transfer_callback_t masterCallback = {
-	.slave2Master = NULL, .ibiCallback = NULL, .transferComplete = i3c_master_callback};
+	.slave2Master		= NULL, 
+	.ibiCallback		= NULL, 
+	.transferComplete	= i3c_master_callback
+};
 #endif // TRY_IBI
 
 /*******************************************************************************
@@ -105,7 +98,7 @@ int main(void)
 	PRINTF("\r\nI3C master read sensor data example.\r\n");
 
 	//	Try DAA
-	change_target_address( P3T1755_ADDR_I2C, P3T1755_ADDR_I3C << 1 );
+	i3c_change_target_address( P3T1755_ADDR_I2C, P3T1755_ADDR_I3C << 1 );
 
 #ifdef TRY_IBI
 	uint16_t	tmp;
