@@ -26,28 +26,30 @@
 
 
 #ifdef	HIGHER_SCL_FREEQ
-#define EXAMPLE_I3C_OD_BAUDRATE 4000000
-#define EXAMPLE_I3C_PP_BAUDRATE 12500000
+#define EXAMPLE_I3C_OD_BAUDRATE		4000000
+#define EXAMPLE_I3C_PP_BAUDRATE		12500000
 #endif	//HIGHER_SCL_FREEQ
 
-#define EXAMPLE_MASTER             I3C0
-#define I3C_MASTER_CLOCK_FREQUENCY CLOCK_GetI3CFClkFreq()
-#define SENSOR_SLAVE_ADDR          0x48U
-#define I3C_TIME_OUT_INDEX 100000000U
+#define EXAMPLE_MASTER				I3C0
+#define I3C_MASTER_CLOCK_FREQUENCY	CLOCK_GetI3CFClkFreq()
+#define SENSOR_SLAVE_ADDR			0x48U
+#define I3C_TIME_OUT_INDEX			100000000U
 
-#define SENSOR_ADDR 0x08U
-#define CCC_RSTDAA  0x06U
-#define CCC_SETDASA 0x87
-#define CCC_ENEC	0x80U
+#define SENSOR_ADDR					0x08U
+#define CCC_RSTDAA					0x06U
+#define CCC_SETDASA					0x87
+#define CCC_ENEC					0x80U
+
+#define P3T1755_CONFIG_VALUE		0x02
 
 #ifndef EXAMPLE_I2C_BAUDRATE
-#define EXAMPLE_I2C_BAUDRATE 400000
+#define EXAMPLE_I2C_BAUDRATE		400000
 #endif
 #ifndef EXAMPLE_I3C_OD_BAUDRATE
-#define EXAMPLE_I3C_OD_BAUDRATE 1500000
+#define EXAMPLE_I3C_OD_BAUDRATE		1500000
 #endif
 #ifndef EXAMPLE_I3C_PP_BAUDRATE
-#define EXAMPLE_I3C_PP_BAUDRATE 4000000
+#define EXAMPLE_I3C_PP_BAUDRATE		4000000
 #endif
 
 /*******************************************************************************
@@ -245,6 +247,8 @@ static void i3c_master_ibi_callback(I3C_Type *base,
 									i3c_ibi_type_t ibiType,
 									i3c_ibi_state_t ibiState)
 {
+	g_ibiWonFlag	= true;
+	
 	switch ( ibiType )
 	{
 		case kI3C_IbiNormal:
@@ -366,7 +370,7 @@ int main(void)
 	const static uint16_t	low		= 27;	//	Expecting little-endian
 	const static uint16_t	high	= 28;	//	Expecting little-endian
 	
-	uint8_t	config	= 0x02;
+	uint8_t	config	= P3T1755_CONFIG_VALUE;
 	result	= P3T1755_WriteReg( &p3t1755Handle, P3T1755_CONFIG_REG, &config, 1 );
 
 	P3T1755_WriteReg( &p3t1755Handle, 0x02, (uint8_t *)&low,  2 );
@@ -383,37 +387,34 @@ int main(void)
 	while (1)
 	{
 #ifdef TRY_IBI
-		if (g_ibiWonFlag)
+		if ( g_ibiWonFlag )
 		{
-			PRINTF("\r\nReceived slave IBI request.");
-			for (uint8_t count = 0; count < g_ibiUserBuffUsed; count++)
-			{
-				PRINTF(" Data 0x%x.", g_ibiUserBuff[count]);
-			}
 			g_ibiWonFlag = false;
+
+			PRINTF("Received target IBI request");
+			for (uint8_t count = 0; count < g_ibiUserBuffUsed; count++)
+				PRINTF(" Data 0x%x.", g_ibiUserBuff[count]);
 		}
 #endif // TRY_IBI
 
 		
 #ifndef	DEFAULT_COMM
-		
-		
 		uint8_t	config;
-//		result	= P3T1755_ReadReg( &p3t1755Handle, P3T1755_CONFIG_REG, &config, 1 );
-
-//		config	= config ? 0x00 : 0x04;
-
-//		result	= P3T1755_WriteReg( &p3t1755Handle, P3T1755_CONFIG_REG, &config, 1 );
+		result	= P3T1755_ReadReg( &p3t1755Handle, P3T1755_CONFIG_REG, &config, 1 );
 		
 		if (result != kStatus_Success)
-			PRINTF("\r\nP3T1755 read temperature failed.\r\n");
+			PRINTF("FAIL @P3T1755_ReadReg\r\n");
 
-//		PRINTF("\r\config:0x%02X\r\n", config);
-//		SDK_DelayAtLeastUs(1000000, CLOCK_GetCoreSysClkFreq());
+		result	= P3T1755_WriteReg( &p3t1755Handle, P3T1755_CONFIG_REG, &config, 1 );
+		
+		if (result != kStatus_Success)
+			PRINTF("FAIL @P3T1755_WriteReg\r\n");
+
+		PRINTF( "config:0x%02X\r\n", config );
 #endif // DEFAULT_COMM
 
 
-//		result = P3T1755_ReadTemperature(&p3t1755Handle, &temperature);
+		result = P3T1755_ReadTemperature(&p3t1755Handle, &temperature);
 
 		if (result != kStatus_Success)
 			PRINTF("\r\nP3T1755 read temperature failed.\r\n");
