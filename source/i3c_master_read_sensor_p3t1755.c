@@ -33,8 +33,6 @@
 
 #define EXAMPLE_I2C_BAUDRATE		400000
 
-#define I3C_MASTER_CLOCK_FREQUENCY	CLOCK_GetI3CFClkFreq()
-
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
@@ -42,49 +40,10 @@ void		init_MCU( void );
 void		init_I3C( void );
 status_t	enable_IBI( uint8_t addr );
 float		short2celsius( uint16_t v );
-static void i3c_master_callback(	I3C_Type			*base, 
-									i3c_master_handle_t	*handle, 
-									status_t			status, 
-									void				*userData
-								);
-
-#ifdef TRY_IBI
-static void i3c_master_ibi_callback(	I3C_Type			*base, 
-										i3c_master_handle_t	*handle, 
-										i3c_ibi_type_t		ibiType, 
-										i3c_ibi_state_t		ibiState
-									);
-#endif // TRY_IBI
-
 
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-#ifdef TRY_IBI
-uint8_t					g_ibiBuff[10U];
-static uint8_t			g_ibiUserBuff[10U];
-static uint8_t			g_ibiUserBuffUsed	= 0;
-static volatile bool	g_ibiWonFlag	= false;
-static uint8_t 			g_ibiAddress;
-#endif // TRY_IBI
-
-volatile status_t		g_completionStatus;
-volatile bool			g_masterCompletionFlag;
-i3c_master_handle_t		g_i3c_m_handle;
-
-#ifdef TRY_IBI
-const i3c_master_transfer_callback_t masterCallback = {
-	.slave2Master		= NULL, 
-	.ibiCallback		= i3c_master_ibi_callback, 
-	.transferComplete	= i3c_master_callback
-};
-#else
-const i3c_master_transfer_callback_t masterCallback = {
-	.slave2Master		= NULL, 
-	.ibiCallback		= NULL, 
-	.transferComplete	= i3c_master_callback
-};
-#endif // TRY_IBI
 
 /*******************************************************************************
  * Code
@@ -93,7 +52,7 @@ const i3c_master_transfer_callback_t masterCallback = {
 int main(void)
 {
 	init_MCU();
-	init_I3C();
+	i3c_init( EXAMPLE_I2C_BAUDRATE, EXAMPLE_I3C_OD_BAUDRATE, EXAMPLE_I3C_PP_BAUDRATE );
 	
 	PRINTF("\r\nI3C master read sensor data example.\r\n");
 
@@ -124,15 +83,17 @@ int main(void)
 
 	i3c_reg_read( P3T1755_ADDR_I3C, P3T1755_REG_T_LOW, (uint8_t *)&tmp, sizeof( tmp ) );
 	PRINTF( " T_LOW (0x02) = %8.4f\r\n", short2celsius( tmp ) );	
+
+	uint8_t	ibi_addr;
+	
 #endif // TRY_IBI
 
 	while (1)
 	{
 #ifdef TRY_IBI
-		if ( g_ibiWonFlag )
+		if ( (ibi_addr	= i3c_check_ibi()) )
 		{
-			g_ibiWonFlag = false;
-			PRINTF("*** IBI : Got IBI from target_address: 7’h%02X (0x%02X)\n", g_ibiAddress, g_ibiAddress << 1 );
+			PRINTF("*** IBI : Got IBI from target_address: 7’h%02X (0x%02X)\n", ibi_addr, ibi_addr << 1 );
 		}
 #endif // TRY_IBI
 		i3c_reg_read( P3T1755_ADDR_I3C, P3T1755_REG_Temp, &tmp, sizeof( tmp ) );
@@ -153,22 +114,6 @@ void init_MCU( void )
 	BOARD_InitDebugConsole();
 }
 
-void init_I3C( void )
-{
-	i3c_master_config_t masterConfig;
-
-	I3C_MasterGetDefaultConfig(&masterConfig);
-	masterConfig.baudRate_Hz.i2cBaud          = EXAMPLE_I2C_BAUDRATE;
-	masterConfig.baudRate_Hz.i3cPushPullBaud  = EXAMPLE_I3C_PP_BAUDRATE;
-	masterConfig.baudRate_Hz.i3cOpenDrainBaud = EXAMPLE_I3C_OD_BAUDRATE;
-	masterConfig.enableOpenDrainStop          = false;
-	masterConfig.disableTimeout               = true;
-	I3C_MasterInit(EXAMPLE_MASTER, &masterConfig, I3C_MASTER_CLOCK_FREQUENCY);
-
-	/* Create I3C handle. */
-	I3C_MasterTransferCreateHandle(EXAMPLE_MASTER, &g_i3c_m_handle, &masterCallback, NULL);
-}
-
 status_t enable_IBI( uint8_t addr )
 {
 	static const uint8_t	ccc		= CCC_ENEC;
@@ -181,38 +126,5 @@ status_t enable_IBI( uint8_t addr )
 float short2celsius( uint16_t v )
 {
 	return (float)(((v & 0x00FF) << 4) | ((v & 0xFF00) >> 12)) * 0.0625;
-}
-
-static void i3c_master_callback( I3C_Type *base, i3c_master_handle_t *handle, status_t status, void *userData )
-{
-	if (status == kStatus_Success)
-		g_masterCompletionFlag = true;
-
-	g_completionStatus = status;
-}
-
-static void i3c_master_ibi_callback( I3C_Type *base, i3c_master_handle_t *handle, i3c_ibi_type_t ibiType, i3c_ibi_state_t ibiState )
-{
-	g_ibiWonFlag	= true;
-	g_ibiAddress	= handle->ibiAddress;
-	
-	switch ( ibiType )
-	{
-		case kI3C_IbiNormal:
-			if ( ibiState == kI3C_IbiDataBuffNeed )
-			{
-				handle->ibiBuff = g_ibiBuff;
-			}
-			else
-			{
-				memcpy( g_ibiUserBuff, (void *)handle->ibiBuff, handle->ibiPayloadSize );
-				g_ibiUserBuffUsed = handle->ibiPayloadSize;
-			}
-			break;
-
-		default:
-			assert(false);
-			break;
-	}
 }
 
