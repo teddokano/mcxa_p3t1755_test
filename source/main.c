@@ -45,6 +45,7 @@ void		write_temp( uint8_t targ, uint8_t reg, float v );
 float		short2celsius( uint16_t v );
 uint16_t	celsius2short( float v );
 uint16_t	swap_bytes( uint16_t v );
+void		wait( float delayTime_sec );
 
 /*******************************************************************************
  * Variables
@@ -80,7 +81,7 @@ int main(void)
 		temp	= read_temp( P3T1755_ADDR_I3C, P3T1755_REG_Temp );
 
 		PRINTF( "Temperature: %8.4f˚C\r\n", temp );
-		SDK_DelayAtLeastUs(1000000, CLOCK_GetCoreSysClkFreq());
+		wait( 1 );
 	}
 }
 
@@ -91,11 +92,11 @@ float temp_sensor_setting( uint8_t addr, uint8_t config )
 	i3c_reg_write( addr, P3T1755_REG_Conf, &config, sizeof( config ) );
 
 	temp	= read_temp( addr, P3T1755_REG_Temp );
-	high	= temp + 2.0;
 	low		= temp + 1.0;
+	high	= temp + 2.0;
 	
-	write_temp( addr, P3T1755_REG_T_HIGH, high );
 	write_temp( addr, P3T1755_REG_T_LOW,  low  );
+	write_temp( addr, P3T1755_REG_T_HIGH, high );
 
 	i3c_enable_IBI( addr );
 	
@@ -104,15 +105,15 @@ float temp_sensor_setting( uint8_t addr, uint8_t config )
 
 void temp_sensor_reg_dump( uint8_t addr )
 {
-	uint16_t	t, h, l;
+	uint16_t	t, l, h;
 	uint8_t		c;
 	
 	i3c_reg_read( addr, P3T1755_REG_Temp,   (uint8_t *)&t, sizeof( t ) );
 	i3c_reg_read( addr, P3T1755_REG_Conf,              &c, sizeof( c ) );
-	i3c_reg_read( addr, P3T1755_REG_T_LOW,  (uint8_t *)&h, sizeof( h ) );
-	i3c_reg_read( addr, P3T1755_REG_T_HIGH, (uint8_t *)&l, sizeof( l ) );
+	i3c_reg_read( addr, P3T1755_REG_T_LOW,  (uint8_t *)&l, sizeof( l ) );
+	i3c_reg_read( addr, P3T1755_REG_T_HIGH, (uint8_t *)&h, sizeof( h ) );
 
-	PRINTF( "\r\n  P3T1755 (I3C target address:7’h%02X (0x%02X)) register dump\r\n", P3T1755_ADDR_I3C, P3T1755_ADDR_I3C << 1 );	
+	PRINTF( "\r\n  P3T1755 register dump - I3C target address:7’h%02X (0x%02X)\r\n", P3T1755_ADDR_I3C, P3T1755_ADDR_I3C << 1 );	
 	PRINTF( "  - Temp   (0x0): 0x%04X (%8.4f˚C)\r\n", swap_bytes( t ), short2celsius( t ) );	
 	PRINTF( "  - Conf   (0x1): 0x  %02X\r\n", c );	
 	PRINTF( "  - T_LOW  (0x2): 0x%04X (%8.4f˚C)\r\n", swap_bytes( l ), short2celsius( l ) );	
@@ -163,4 +164,9 @@ void init_MCU( void )
 	BOARD_InitPins();
 	BOARD_BootClockFRO48M();
 	BOARD_InitDebugConsole();
+}
+
+void wait( float delayTime_sec )
+{
+	SDK_DelayAtLeastUs( (uint32_t)(delayTime_sec * 1000000.0), CLOCK_GetCoreSysClkFreq() );
 }
