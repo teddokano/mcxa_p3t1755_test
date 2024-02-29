@@ -19,7 +19,7 @@
  ******************************************************************************/
 
 //#define	HIGHER_SCL_FREEQ
-//#define	DEFAULT_COMM
+#define	DEFAULT_COMM
 #define	TRY_IBI
 
 //#define	BLOCKING_TRANSFER	//	Not supported in this version
@@ -71,6 +71,7 @@ uint8_t g_ibiBuff[10U];
 static uint8_t g_ibiUserBuff[10U];
 static uint8_t g_ibiUserBuffUsed            = 0;
 static volatile bool g_ibiWonFlag           = false;
+static uint8_t 	g_ibiAddress;
 #endif // TRY_IBI
 
 volatile status_t g_completionStatus;
@@ -92,12 +93,37 @@ const i3c_master_transfer_callback_t masterCallback = {
 static void i3c_master_callback(I3C_Type *base, i3c_master_handle_t *handle, status_t status, void *userData)
 {
 	if (status == kStatus_Success)
-	{
 		g_masterCompletionFlag = true;
-	}
 
 	g_completionStatus = status;
 }
+
+status_t i3c_xfer( i3c_direction_t dir, i3c_bus_type_t type, uint8_t targ, uint8_t *dp, int length, bool stop )
+{
+	i3c_master_transfer_t masterXfer = {0};
+	
+	masterXfer.slaveAddress = targ;
+	masterXfer.data         = dp;
+	masterXfer.dataSize     = length;
+	masterXfer.direction    = dir;
+	masterXfer.busType      = type;
+	masterXfer.flags        = stop ? kI3C_TransferDefaultFlag : kI3C_TransferNoStopFlag;
+	
+	return I3C_MasterTransferBlocking( EXAMPLE_MASTER, &masterXfer );
+}
+
+status_t i3c_write( uint8_t targ, const uint8_t *dp, int length, bool stop )
+{
+	return i3c_xfer( kI3C_Write, kI3C_TypeI3CSdr, targ, dp, length, stop );
+}
+
+status_t i3c_read( uint8_t targ, uint8_t *dp, int length, bool stop )
+{
+	return i3c_xfer( kI3C_Read, kI3C_TypeI3CSdr, targ, dp, length, stop );
+}
+
+
+
 
 status_t I3C_WriteSensor(uint8_t deviceAddress, uint32_t regAddress, uint8_t *regData, size_t dataSize)
 {
@@ -195,70 +221,35 @@ status_t I3C_ReadSensor(uint8_t deviceAddress, uint32_t regAddress, uint8_t *reg
 	return result;
 }
 
+
 status_t p3t1755_set_dynamic_address(void)
 {
-	status_t result                  = kStatus_Success;
-	i3c_master_transfer_t masterXfer = {0};
-	uint8_t g_master_txBuff[1];
+	uint8_t	data	= CCC_RSTDAA;
+	i3c_write( 0x7E, &data, 1, true );
 
-	/* Reset dynamic address. */
-	g_master_txBuff[0]      = CCC_RSTDAA;
-	masterXfer.slaveAddress = 0x7E;
-	masterXfer.data         = g_master_txBuff;
-	masterXfer.dataSize     = 1;
-	masterXfer.direction    = kI3C_Write;
-	masterXfer.busType      = kI3C_TypeI3CSdr;
-	masterXfer.flags        = kI3C_TransferDefaultFlag;
-	result                  = I3C_MasterTransferBlocking(EXAMPLE_MASTER, &masterXfer);
-	if (result != kStatus_Success)
-	{
-		return result;
-	}
+	data	= CCC_SETDASA;
+	i3c_write( 0x7E, &data, 1, false );
 
-	/* Assign dynmic address. */
-	memset(&masterXfer, 0, sizeof(masterXfer));
-	g_master_txBuff[0]      = CCC_SETDASA;
-	masterXfer.slaveAddress = 0x7E;
-	masterXfer.data         = g_master_txBuff;
-	masterXfer.dataSize     = 1;
-	masterXfer.direction    = kI3C_Write;
-	masterXfer.busType      = kI3C_TypeI3CSdr;
-	masterXfer.flags        = kI3C_TransferNoStopFlag;
-	result                  = I3C_MasterTransferBlocking(EXAMPLE_MASTER, &masterXfer);
-	if (result != kStatus_Success)
-	{
-		return result;
-	}
-
-	memset(&masterXfer, 0, sizeof(masterXfer));
-	g_master_txBuff[0]      = SENSOR_ADDR << 1;
-	masterXfer.slaveAddress = SENSOR_SLAVE_ADDR;
-	masterXfer.data         = g_master_txBuff;
-	masterXfer.dataSize     = 1;
-	masterXfer.direction    = kI3C_Write;
-	masterXfer.busType      = kI3C_TypeI3CSdr;
-	masterXfer.flags        = kI3C_TransferDefaultFlag;
-	return I3C_MasterTransferBlocking(EXAMPLE_MASTER, &masterXfer);
+	data	= SENSOR_ADDR << 1;
+	i3c_write( SENSOR_SLAVE_ADDR, &data, 1, true );
 }
 
 #ifdef TRY_IBI
-static void i3c_master_ibi_callback(I3C_Type *base,
-									i3c_master_handle_t *handle,
-									i3c_ibi_type_t ibiType,
-									i3c_ibi_state_t ibiState)
+static void i3c_master_ibi_callback( I3C_Type *base, i3c_master_handle_t *handle, i3c_ibi_type_t ibiType, i3c_ibi_state_t ibiState )
 {
 	g_ibiWonFlag	= true;
+	g_ibiAddress	= handle->ibiAddress;
 	
 	switch ( ibiType )
 	{
 		case kI3C_IbiNormal:
-			if (ibiState == kI3C_IbiDataBuffNeed)
+			if ( ibiState == kI3C_IbiDataBuffNeed )
 			{
 				handle->ibiBuff = g_ibiBuff;
 			}
 			else
 			{
-				memcpy(g_ibiUserBuff, (void *)handle->ibiBuff, handle->ibiPayloadSize);
+				memcpy( g_ibiUserBuff, (void *)handle->ibiBuff, handle->ibiPayloadSize );
 				g_ibiUserBuffUsed = handle->ibiPayloadSize;
 			}
 			break;
@@ -271,55 +262,16 @@ static void i3c_master_ibi_callback(I3C_Type *base,
 
 status_t p3t1755_enable_IBI(void)
 {
-	status_t result                  = kStatus_Success;
-	i3c_master_transfer_t masterXfer = {0};
-	uint8_t g_master_txBuff[1];
+	static const uint8_t	ccc		= CCC_ENEC;
+	static const uint8_t	set_int	= 0x01;
 
-	/* Broadast CCC_ENEC */
-	g_master_txBuff[0]      = CCC_ENEC;
-	masterXfer.slaveAddress = 0x7E;
-	masterXfer.data         = g_master_txBuff;
-	masterXfer.dataSize     = 1;
-	masterXfer.direction    = kI3C_Write;
-	masterXfer.busType      = kI3C_TypeI3CSdr;
-	masterXfer.flags        = kI3C_TransferNoStopFlag;
-	result                  = I3C_MasterTransferBlocking(EXAMPLE_MASTER, &masterXfer);
-	if (result != kStatus_Success)
-	{
-		return result;
-	}
-
-	/* Enable/ Disable Target Event Byte */
-	memset(&masterXfer, 0, sizeof(masterXfer));
-	g_master_txBuff[0]      = 0x01;
-	masterXfer.slaveAddress = SENSOR_ADDR;
-	masterXfer.data         = g_master_txBuff;
-	masterXfer.dataSize     = 1;
-	masterXfer.direction    = kI3C_Write;
-	masterXfer.busType      = kI3C_TypeI3CSdr;
-	masterXfer.flags        = kI3C_TransferDefaultFlag;
-	result                  = I3C_MasterTransferBlocking(EXAMPLE_MASTER, &masterXfer);
-	if (result != kStatus_Success)
-	{
-		return result;
-	}
-
-	return result;
+	i3c_write( 0x7E, &ccc, 1, false );
+	i3c_write( SENSOR_ADDR, &set_int, 1, true  );
 }
-
-
 #endif // TRY_IBI
 
-/*!
- * @brief Main function
- */
-int main(void)
+void init_MCU( void )
 {
-	status_t result = kStatus_Success;
-	i3c_master_config_t masterConfig;
-	p3t1755_config_t p3t1755Config;
-	double temperature;
-
 	/* Attach clock to I3C 24MHZ */
 	CLOCK_SetClockDiv(kCLOCK_DivI3C0_FCLK, 2U);
 	CLOCK_AttachClk(kFRO_HF_DIV_to_I3C0FCLK);
@@ -327,8 +279,11 @@ int main(void)
 	BOARD_InitPins();
 	BOARD_BootClockFRO48M();
 	BOARD_InitDebugConsole();
+}
 
-	PRINTF("\r\nI3C master read sensor data example.\r\n");
+void init_I3C( void )
+{
+	i3c_master_config_t masterConfig;
 
 	I3C_MasterGetDefaultConfig(&masterConfig);
 	masterConfig.baudRate_Hz.i2cBaud          = EXAMPLE_I2C_BAUDRATE;
@@ -340,86 +295,75 @@ int main(void)
 
 	/* Create I3C handle. */
 	I3C_MasterTransferCreateHandle(EXAMPLE_MASTER, &g_i3c_m_handle, &masterCallback, NULL);
+}
 
-	result = p3t1755_set_dynamic_address();
-	if (result != kStatus_Success)
-	{
-		PRINTF("\r\nP3T1755 set dynamic address failed.\r\n");
-	}
+/*!
+ * @brief Main function
+ */
+int main(void)
+{
+	status_t result = kStatus_Success;
+	p3t1755_config_t p3t1755Config;
+	double temperature;
+
+	init_MCU();
+	init_I3C();
+	
+	PRINTF("\r\nI3C master read sensor data example.\r\n");
+
+	p3t1755_set_dynamic_address();
 
 	p3t1755Config.writeTransfer = I3C_WriteSensor;
 	p3t1755Config.readTransfer  = I3C_ReadSensor;
 	p3t1755Config.sensorAddress = SENSOR_ADDR;
 	P3T1755_Init(&p3t1755Handle, &p3t1755Config);
 
-	uint16_t	tmp;
-	result	= P3T1755_ReadReg( &p3t1755Handle, 0x02, (uint8_t *)&tmp, 2 );
-	PRINTF( " LOW  0x%04x\n", tmp );	
-	result	= P3T1755_ReadReg( &p3t1755Handle, 0x03, (uint8_t *)&tmp, 2 );
-	PRINTF( " HIGH 0x%04x\n", tmp );
-
 #ifdef TRY_IBI
-	result = p3t1755_enable_IBI();
-
-	if (result != kStatus_Success)
-		PRINTF( "\nFAIL @p3t1755_enable_IBI\n" );
-	else
-		PRINTF( "\nIBP enabled\n" );
-	
-#if 1
-	const static uint16_t	low		= 27;	//	Expecting little-endian
-	const static uint16_t	high	= 28;	//	Expecting little-endian
-	
+	uint16_t	tmp;
 	uint8_t	config	= P3T1755_CONFIG_VALUE;
-	result	= P3T1755_WriteReg( &p3t1755Handle, P3T1755_CONFIG_REG, &config, 1 );
+	P3T1755_WriteReg( &p3t1755Handle, P3T1755_CONFIG_REG, &config, 1 );
 
-	P3T1755_WriteReg( &p3t1755Handle, 0x02, (uint8_t *)&low,  2 );
-	P3T1755_WriteReg( &p3t1755Handle, 0x03, (uint8_t *)&high, 2 );
-#endif
+	p3t1755_enable_IBI();
+
+	P3T1755_ReadReg( &p3t1755Handle, 0x00, (uint8_t *)&tmp, 2 );
+	PRINTF( " Temp reg read value: 0x%04x\r\n", tmp );
+	
+	tmp	= (tmp & 0x00FF) + 1;	//	valid in little-endian system only
+	
+	P3T1755_WriteReg( &p3t1755Handle, 0x02, (uint8_t *)&tmp,  2 );
+	
+	tmp	+= 1;	//	valid in little-endian system only
+	P3T1755_WriteReg( &p3t1755Handle, 0x03, (uint8_t *)&tmp, 2 );
+
+	P3T1755_ReadReg( &p3t1755Handle, 0x02, (uint8_t *)&tmp, 2 );
+	PRINTF( " LOW  0x%04x\r\n", tmp );	
+
+	P3T1755_ReadReg( &p3t1755Handle, 0x03, (uint8_t *)&tmp, 2 );
+	PRINTF( " HIGH 0x%04x\r\n", tmp );
+
 #endif // TRY_IBI
 
-//	uint16_t	tmp;
-	result	= P3T1755_ReadReg( &p3t1755Handle, 0x02, (uint8_t *)&tmp, 2 );
-	PRINTF( " LOW  0x%04x\n", tmp );	
-	result	= P3T1755_ReadReg( &p3t1755Handle, 0x03, (uint8_t *)&tmp, 2 );
-	PRINTF( " HIGH 0x%04x\n", tmp );
-	
 	while (1)
 	{
 #ifdef TRY_IBI
 		if ( g_ibiWonFlag )
 		{
 			g_ibiWonFlag = false;
-
-			PRINTF("Received target IBI request");
-			for (uint8_t count = 0; count < g_ibiUserBuffUsed; count++)
-				PRINTF(" Data 0x%x.", g_ibiUserBuff[count]);
+			PRINTF("*** IBI : Got IBI from target_address: 7’h%02X (0x%02X)\n", g_ibiAddress, g_ibiAddress << 1 );
 		}
 #endif // TRY_IBI
 
-		
 #ifndef	DEFAULT_COMM
 		uint8_t	config;
-		result	= P3T1755_ReadReg( &p3t1755Handle, P3T1755_CONFIG_REG, &config, 1 );
+		P3T1755_ReadReg(  &p3t1755Handle, P3T1755_CONFIG_REG, &config, 1 );		
+		P3T1755_WriteReg( &p3t1755Handle, P3T1755_CONFIG_REG, &config, 1 );
 		
-		if (result != kStatus_Success)
-			PRINTF("FAIL @P3T1755_ReadReg\r\n");
-
-		result	= P3T1755_WriteReg( &p3t1755Handle, P3T1755_CONFIG_REG, &config, 1 );
-		
-		if (result != kStatus_Success)
-			PRINTF("FAIL @P3T1755_WriteReg\r\n");
-
 		PRINTF( "config:0x%02X\r\n", config );
 #endif // DEFAULT_COMM
 
+		P3T1755_ReadTemperature( &p3t1755Handle, &temperature );
 
-		result = P3T1755_ReadTemperature(&p3t1755Handle, &temperature);
-
-		if (result != kStatus_Success)
-			PRINTF("\r\nP3T1755 read temperature failed.\r\n");
-
-		PRINTF("Temperature:%f \r\n", temperature);
+		PRINTF( "Temperature:%f \r\n", temperature );
 		SDK_DelayAtLeastUs(1000000, CLOCK_GetCoreSysClkFreq());
 	}
 }
