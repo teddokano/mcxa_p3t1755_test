@@ -8,8 +8,8 @@
 #include <string.h>
 /*  SDK Included Files */
 #include "fsl_debug_console.h"
-//#include "fsl_p3t1755.h"
 #include "fsl_i3c.h"
+#include "i3c.h"
 #include "pin_mux.h"
 #include "clock_config.h"
 #include "board.h"
@@ -21,7 +21,6 @@
 //#define	HIGHER_SCL_FREEQ
 //#define	DEFAULT_COMM
 #define	TRY_IBI
-#define	REG_RW_BUFFER_SIZE			10
 //#define	BLOCKING_TRANSFER	//	Not supported in this version
 
 
@@ -40,15 +39,7 @@
 #define EXAMPLE_I3C_PP_BAUDRATE		4000000
 #endif
 
-#define EXAMPLE_MASTER				I3C0
 #define I3C_MASTER_CLOCK_FREQUENCY	CLOCK_GetI3CFClkFreq()
-#define I3C_TIME_OUT_INDEX			100000000U
-
-#define I3C_BROADCAST_ADDR			0x07E
-
-#define CCC_RSTDAA					0x06U
-#define CCC_SETDASA					0x87U
-#define CCC_ENEC					0x80U
 
 #define P3T1755_ADDR_I2C			0x48U
 #define P3T1755_ADDR_I3C			0x08U
@@ -73,6 +64,12 @@ static void i3c_master_ibi_callback(I3C_Type *base,
 #endif // TRY_IBI
 
 static void i3c_master_callback(I3C_Type *base, i3c_master_handle_t *handle, status_t status, void *userData);
+status_t	change_target_address( uint8_t old_addr, uint8_t new_addr );
+status_t	p3t1755_enable_IBI( void );
+void		init_MCU( void );
+void		init_I3C( void );
+float		short2celsius( uint16_t v );
+
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -107,59 +104,6 @@ static void i3c_master_callback(I3C_Type *base, i3c_master_handle_t *handle, sta
 	g_completionStatus = status;
 }
 
-status_t i3c_xfer( i3c_direction_t dir, i3c_bus_type_t type, uint8_t targ, uint8_t *dp, int length, bool stop )
-{
-	i3c_master_transfer_t masterXfer = {0};
-	
-	masterXfer.slaveAddress = targ;
-	masterXfer.data         = dp;
-	masterXfer.dataSize     = length;
-	masterXfer.direction    = dir;
-	masterXfer.busType      = type;
-	masterXfer.flags        = stop ? kI3C_TransferDefaultFlag : kI3C_TransferNoStopFlag;
-	
-	return I3C_MasterTransferBlocking( EXAMPLE_MASTER, &masterXfer );
-}
-
-status_t i3c_write( uint8_t targ, const uint8_t *dp, int length, bool stop )
-{
-	return i3c_xfer( kI3C_Write, kI3C_TypeI3CSdr, targ, dp, length, stop );
-}
-
-status_t i3c_read( uint8_t targ, uint8_t *dp, int length, bool stop )
-{
-	return i3c_xfer( kI3C_Read, kI3C_TypeI3CSdr, targ, dp, length, stop );
-}
-
-status_t i3c_reg_write( uint8_t targ, uint8_t reg, const uint8_t *dp, int length )
-{
-	uint8_t	bp[ REG_RW_BUFFER_SIZE ];
-	
-	bp[ 0 ]	= reg;
-	memcpy( (uint8_t *)bp + 1, (uint8_t *)dp, length );
-
-	return i3c_write( targ, bp, length + 1, true );
-}
-
-status_t i3c_reg_read( uint8_t targ, uint8_t reg, uint8_t *dp, int length )
-{
-	i3c_write( targ, &reg, 1, false );
-	return i3c_read( targ, dp, length, true );
-}
-
-status_t change_target_address( uint8_t old_addr, uint8_t new_addr )
-{
-	uint8_t	data	= CCC_RSTDAA;
-	i3c_write( I3C_BROADCAST_ADDR, &data, 1, true );
-
-	data	= CCC_SETDASA;
-	i3c_write( I3C_BROADCAST_ADDR, &data, 1, false );
-
-	data	= new_addr;
-	i3c_write( old_addr, &data, 1, true );
-}
-
-#ifdef TRY_IBI
 static void i3c_master_ibi_callback( I3C_Type *base, i3c_master_handle_t *handle, i3c_ibi_type_t ibiType, i3c_ibi_state_t ibiState )
 {
 	g_ibiWonFlag	= true;
@@ -193,7 +137,6 @@ status_t p3t1755_enable_IBI(void)
 	i3c_write( I3C_BROADCAST_ADDR, &ccc, 1, false );
 	i3c_write( P3T1755_ADDR_I3C, &set_int, 1, true  );
 }
-#endif // TRY_IBI
 
 void init_MCU( void )
 {
@@ -254,11 +197,11 @@ int main(void)
 	PRINTF( " Temp reg read value: %8.4f\r\n", short2celsius( tmp ) );
 	
 	tmp++;	//	valid in little-endian system only
-	i3c_reg_write( P3T1755_ADDR_I3C, P3T1755_REG_T_HIGH, (uint8_t *)&tmp, sizeof( tmp ) );
+	i3c_reg_write( P3T1755_ADDR_I3C, P3T1755_REG_T_LOW, (uint8_t *)&tmp, sizeof( tmp ) );
 
 	tmp++;	//	valid in little-endian system only
-	i3c_reg_write( P3T1755_ADDR_I3C, P3T1755_REG_T_LOW, (uint8_t *)&tmp, sizeof( tmp ) );
-	
+	i3c_reg_write( P3T1755_ADDR_I3C, P3T1755_REG_T_HIGH, (uint8_t *)&tmp, sizeof( tmp ) );
+
 	i3c_reg_read( P3T1755_ADDR_I3C, P3T1755_REG_T_HIGH, (uint8_t *)&tmp, sizeof( tmp ) );
 	PRINTF( " T_HIGH(0x03) = %8.4f\r\n", short2celsius( tmp ) );
 
