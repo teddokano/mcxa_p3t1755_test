@@ -138,103 +138,6 @@ status_t i3c_reg_read( uint8_t targ, uint8_t reg, uint8_t *dp, int length, bool 
 	return i3c_read( targ, dp, length, stop );
 }
 
-status_t I3C_WriteSensor(uint8_t deviceAddress, uint32_t regAddress, uint8_t *regData, size_t dataSize)
-{
-	status_t result                  = kStatus_Success;
-	i3c_master_transfer_t masterXfer = {0};
-	uint32_t timeout                 = 0U;
-
-	masterXfer.slaveAddress   = deviceAddress;
-	masterXfer.direction      = kI3C_Write;
-	masterXfer.busType        = kI3C_TypeI3CSdr;
-	masterXfer.subaddress     = regAddress;
-	masterXfer.subaddressSize = 1;
-	masterXfer.data           = regData;
-	masterXfer.dataSize       = dataSize;
-	masterXfer.flags          = kI3C_TransferDefaultFlag;
-
-	g_masterCompletionFlag = false;
-	g_completionStatus     = kStatus_Success;
-	
-#ifdef	BLOCKING_TRANSFER
-	result	= I3C_MasterTransferBlocking(EXAMPLE_MASTER, &masterXfer);
-#else
-	result	= I3C_MasterTransferNonBlocking(EXAMPLE_MASTER, &g_i3c_m_handle, &masterXfer);
-#endif	// BLOCKING_TRANSFER
-	
-	if (kStatus_Success != result)
-	{
-		PRINTF("\r\nERROR @I3C_WriteSensor\r\n");
-		return result;
-	}
-
-	while (!g_masterCompletionFlag)
-	{
-		timeout++;
-		if ((g_completionStatus != kStatus_Success) || (timeout > I3C_TIME_OUT_INDEX))
-		{
-			break;
-		}
-	}
-
-	if (timeout == I3C_TIME_OUT_INDEX)
-	{
-		result = kStatus_Timeout;
-	}
-	result = g_completionStatus;
-
-	return result;
-}
-
-status_t I3C_ReadSensor(uint8_t deviceAddress, uint32_t regAddress, uint8_t *regData, size_t dataSize)
-{
-	status_t result                  = kStatus_Success;
-	i3c_master_transfer_t masterXfer = {0};
-	uint32_t timeout                 = 0U;
-
-	masterXfer.slaveAddress   = deviceAddress;
-	masterXfer.direction      = kI3C_Read;
-	masterXfer.busType        = kI3C_TypeI3CSdr;
-	masterXfer.subaddress     = regAddress;
-	masterXfer.subaddressSize = 1;
-	masterXfer.data           = regData;
-	masterXfer.dataSize       = dataSize;
-	masterXfer.flags          = kI3C_TransferDefaultFlag;
-
-	g_masterCompletionFlag = false;
-	g_completionStatus     = kStatus_Success;
-
-#ifdef	BLOCKING_TRANSFER
-	result	= I3C_MasterTransferBlocking(EXAMPLE_MASTER, &masterXfer);
-#else
-	result	= I3C_MasterTransferNonBlocking(EXAMPLE_MASTER, &g_i3c_m_handle, &masterXfer);
-#endif	// BLOCKING_TRANSFER
-	
-	if (kStatus_Success != result)
-	{
-		PRINTF("\r\nERROR @I3C_ReadSensor\r\n");
-		return result;
-	}
-
-	while (!g_masterCompletionFlag)
-	{
-		timeout++;
-		if ((g_completionStatus != kStatus_Success) || (timeout > I3C_TIME_OUT_INDEX))
-		{
-			break;
-		}
-	}
-
-	if (timeout == I3C_TIME_OUT_INDEX)
-	{
-		result = kStatus_Timeout;
-	}
-	result = g_completionStatus;
-
-	return result;
-}
-
-
 //status_t p3t1755_set_dynamic_address( uint8_t old_addr, uint8_t new_addr )
 status_t p3t1755_set_dynamic_address( void )
 {
@@ -326,11 +229,6 @@ int main(void)
 	PRINTF("\r\nI3C master read sensor data example.\r\n");
 
 	p3t1755_set_dynamic_address();
-
-	p3t1755Config.writeTransfer = I3C_WriteSensor;
-	p3t1755Config.readTransfer  = I3C_ReadSensor;
-	p3t1755Config.sensorAddress = SENSOR_ADDR;
-	P3T1755_Init(&p3t1755Handle, &p3t1755Config);
 
 #ifdef TRY_IBI
 	uint16_t	tmp;
