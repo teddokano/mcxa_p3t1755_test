@@ -40,6 +40,7 @@ void		init_MCU( void );
 void		init_I3C( void );
 status_t	enable_IBI( uint8_t addr );
 float		short2celsius( uint16_t v );
+uint16_t	celsius2short( float v );
 
 /*******************************************************************************
  * Variables
@@ -69,6 +70,15 @@ int main(void)
 	
 	enable_IBI( P3T1755_ADDR_I3C );
 
+	
+	for ( uint16_t i = 40; i < 50; i++ )
+	{
+		uint16_t us	= celsius2short( (float)i / 2.0 );
+		float t	= short2celsius( us );
+		
+		PRINTF( "%2u, 0x%04X, %8.4f\r\n", i, us, t );		
+	}
+	
 	i3c_reg_read( P3T1755_ADDR_I3C, P3T1755_REG_Temp, (uint8_t *)&tmp, sizeof( tmp ) );
 	PRINTF( " Temp reg read value: %8.4f\r\n", short2celsius( tmp ) );
 	
@@ -103,6 +113,8 @@ int main(void)
 	}
 }
 
+
+
 void init_MCU( void )
 {
 	/* Attach clock to I3C 24MHZ */
@@ -125,6 +137,21 @@ status_t enable_IBI( uint8_t addr )
 
 float short2celsius( uint16_t v )
 {
+#ifdef __BIG_ENDIAN__
+	return (float)v * 0.0625;
+#else
 	return (float)(((v & 0x00FF) << 4) | ((v & 0xFF00) >> 12)) * 0.0625;
+#endif
+}
+
+uint16_t celsius2short( float v )
+{
+	uint16_t tmp	= (uint16_t)(v * 256.0);
+
+#ifdef __BIG_ENDIAN__
+	return tmp;
+#else	
+	return (uint16_t)((tmp << 8) | (tmp >> 8));
+#endif
 }
 
