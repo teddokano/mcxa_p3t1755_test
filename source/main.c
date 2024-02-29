@@ -65,7 +65,7 @@ int main(void)
 	init_MCU();
 	i3c_init( EXAMPLE_I2C_BAUDRATE, EXAMPLE_I3C_OD_BAUDRATE, EXAMPLE_I3C_PP_BAUDRATE );
 	
-	PRINTF("\r\nI3C master read sensor data example.\r\n");
+	PRINTF("\r\nI3C master example: reading P3T1755 data and get IBI\r\n");
 
 	//	Try DAA
 	i3c_change_target_address( P3T1755_ADDR_I2C, P3T1755_ADDR_I3C << 1 );
