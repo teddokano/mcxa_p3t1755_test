@@ -76,14 +76,8 @@ status_t i3c_read( uint8_t targ, uint8_t *dp, int length, bool stop )
 
 status_t i3c_change_target_address( uint8_t old_addr, uint8_t new_addr )
 {
-	uint8_t	data	= CCC_BROADCAST_RSTDAA;
-	i3c_write( I3C_BROADCAST_ADDR, &data, 1, true );
-
-	data	= CCC_DIRECT_SETDASA;
-	i3c_write( I3C_BROADCAST_ADDR, &data, 1, false );
-
-	data	= new_addr;
-	i3c_write( old_addr, &data, 1, true );
+	ccc_broadcast( CCC_BROADCAST_RSTDAA, NULL, 0 );
+	ccc_set( CCC_DIRECT_SETDASA, old_addr, new_addr );
 }
 
 status_t i3c_xfer( i3c_direction_t dir, i3c_bus_type_t type, uint8_t targ, uint8_t *dp, int length, bool stop )
@@ -118,13 +112,26 @@ void i3c_init( uint32_t i2c_freq, uint32_t i3c_od_freq, uint32_t i3c_pp_freq )
 	I3C_MasterTransferCreateHandle( EXAMPLE_MASTER, &g_i3c_m_handle, &masterCallback, NULL );
 }
 
-status_t i3c_enable_IBI( uint8_t addr )
+status_t ccc_broadcast( uint8_t ccc, const uint8_t *dp, uint8_t length )
 {
-	static const uint8_t	ccc		= CCC_DIRECT_ENEC;
-	static const uint8_t	set_int	= 0x01;
+	uint8_t	bp[ REG_RW_BUFFER_SIZE ];
 
+	bp[ 0 ]	= ccc;
+	memcpy( (uint8_t *)bp + 1, (uint8_t *)dp, length );
+	
+	return i3c_write( I3C_BROADCAST_ADDR, bp, length + 1, true );
+}
+
+status_t ccc_set( uint8_t ccc, uint8_t addr, uint8_t data )
+{
 	i3c_write( I3C_BROADCAST_ADDR, &ccc, 1, false );
-	i3c_write( addr, &set_int, 1, true  );
+	i3c_write( addr, &data, 1, true  );
+}
+
+status_t ccc_get( uint8_t ccc, uint8_t addr, uint8_t *dp, uint8_t length )
+{
+	i3c_write( I3C_BROADCAST_ADDR, &ccc, 1, false );
+	i3c_read( addr, dp, length, true );
 }
 
 uint8_t	i3c_check_IBI( void )
