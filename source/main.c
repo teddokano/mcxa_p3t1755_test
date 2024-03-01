@@ -43,6 +43,10 @@ uint16_t	celsius2short( float v );
 uint16_t	swap_bytes( uint16_t v );
 void		wait( float delayTime_sec );
 
+
+#define BOARD_LED_GPIO     BOARD_LED_RED_GPIO
+#define BOARD_LED_GPIO_PIN BOARD_LED_RED_GPIO_PIN
+
 int main(void)
 {
 	init_MCU();
@@ -61,7 +65,24 @@ int main(void)
 	temp_sensor_reg_dump( P3T1755_ADDR_I3C );
 
 	uint8_t	ibi_addr;
-	
+
+
+
+	   /* Define the init structure for the output LED pin*/
+	    gpio_pin_config_t led_config = {
+	        kGPIO_DigitalOutput,
+	        0,
+	    };
+
+
+	CLOCK_EnableClock( kCLOCK_GateGPIO3 );
+	GPIO_PinInit(BOARD_LED_GPIO, BOARD_LED_GPIO_PIN, &led_config);
+
+
+
+
+
+
 	while (1)
 	{
 		if ( (ibi_addr	= i3c_check_IBI()) )
@@ -159,12 +180,19 @@ uint16_t swap_bytes( uint16_t v )
 
 void init_MCU( void )
 {
+
 	/* Attach clock to I3C 24MHZ */
 	CLOCK_SetClockDiv(kCLOCK_DivI3C0_FCLK, 2U);
 	CLOCK_AttachClk(kFRO_HF_DIV_to_I3C0FCLK);
 
+     /* Board pin, clock, debug console init */
+    CLOCK_EnableClock( kCLOCK_GateGPIO3 );
+
+
 	BOARD_InitPins();
-	BOARD_BootClockFRO48M();
+//	BOARD_BootClockFRO48M();
+    BOARD_InitBootClocks();
+
 	BOARD_InitDebugConsole();
 }
 
