@@ -25,7 +25,7 @@
  * Definitions
  ******************************************************************************/
 
-#define	HIGHER_SCL_FREEQ
+//#define	HIGHER_SCL_FREEQ
 #define	TRY_IBI
 
 #ifdef	HIGHER_SCL_FREEQ
@@ -124,6 +124,11 @@ void temp_sensor_reg_dump( uint8_t addr )
 	PRINTF( "  - T_LOW  (0x2): 0x%04X (%8.4f˚C)\r\n", swap_bytes( l ), short2celsius( l ) );	
 	PRINTF( "  - T_HIGH (0x3): 0x%04X (%8.4f˚C)\r\n", swap_bytes( h ), short2celsius( h ) );	
 	PRINTF( "\r\n" );	
+}
+
+void get_PID( uint8_t addr, uint8_t buffer )
+{
+	
 }
 
 float read_temp( uint8_t targ, uint8_t reg )

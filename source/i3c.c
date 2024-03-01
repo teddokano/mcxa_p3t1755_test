@@ -76,10 +76,10 @@ status_t i3c_read( uint8_t targ, uint8_t *dp, int length, bool stop )
 
 status_t i3c_change_target_address( uint8_t old_addr, uint8_t new_addr )
 {
-	uint8_t	data	= CCC_RSTDAA;
+	uint8_t	data	= CCC_BROADCAST_RSTDAA;
 	i3c_write( I3C_BROADCAST_ADDR, &data, 1, true );
 
-	data	= CCC_SETDASA;
+	data	= CCC_DIRECT_SETDASA;
 	i3c_write( I3C_BROADCAST_ADDR, &data, 1, false );
 
 	data	= new_addr;
@@ -120,7 +120,7 @@ void i3c_init( uint32_t i2c_freq, uint32_t i3c_od_freq, uint32_t i3c_pp_freq )
 
 status_t i3c_enable_IBI( uint8_t addr )
 {
-	static const uint8_t	ccc		= CCC_ENEC;
+	static const uint8_t	ccc		= CCC_DIRECT_ENEC;
 	static const uint8_t	set_int	= 0x01;
 
 	i3c_write( I3C_BROADCAST_ADDR, &ccc, 1, false );

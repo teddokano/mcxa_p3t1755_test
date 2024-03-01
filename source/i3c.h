@@ -11,11 +11,20 @@
 
 #include "fsl_i3c.h"
 
-#define I3C_BROADCAST_ADDR		0x07E
+#define I3C_BROADCAST_ADDR		0x7E
 
-#define CCC_RSTDAA				0x06U
-#define CCC_SETDASA				0x87U
-#define CCC_ENEC				0x80U
+#define CCC_BROADCAST_ENEC		0x00
+#define CCC_BROADCAST_RSTDAA	0x06
+#define CCC_BROADCAST_ENTDAA	0x07
+#define CCC_DIRECT_ENEC			0x80
+#define CCC_DIRECT_DICEC		0x81
+#define CCC_DIRECT_SETDASA		0x87
+#define CCC_DIRECT_SETNEWDA		0x88
+#define CCC_DIRECT_GETPID		0x8D
+#define CCC_DIRECT_GETBCR		0x8E
+#define CCC_DIRECT_GETDCR		0x8F
+#define CCC_DIRECT_GETSTATUS	0x90
+#define CCC_DIRECT_RSTACT		0x90
 
 void		i3c_init( uint32_t i2c_freq, uint32_t i3c_od_freq, uint32_t i3c_pp_freq );
 status_t	i3c_reg_write( uint8_t targ, uint8_t reg, const uint8_t *dp, int length );
