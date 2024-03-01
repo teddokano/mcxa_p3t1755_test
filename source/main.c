@@ -48,7 +48,7 @@ int main(void)
 	init_MCU();
 	i3c_init( EXAMPLE_I2C_BAUDRATE, EXAMPLE_I3C_OD_BAUDRATE, EXAMPLE_I3C_PP_BAUDRATE );
 	
-	PRINTF("\r\nI3C master example: reading P3T1755 data and get IBI\r\n");
+	PRINTF("\r\nP3T1755 (Temperature sensor) I3C operation sample: getting temperature data and IBI\r\n");
 
 	//	Try DAA
 	ccc_broadcast( CCC_BROADCAST_RSTDAA, NULL, 0 ); // Reset DAA
@@ -109,7 +109,7 @@ void temp_sensor_reg_dump( uint8_t addr )
 	ccc_get( CCC_DIRECT_GETBCR, addr, &bcr, 1 );
 	ccc_get( CCC_DIRECT_GETDCR, addr, &dcr, 1 );
 
-	PRINTF( "\r\n  P3T1755 register dump - I3C target address:7’h%02X (0x%02X)\r\n", P3T1755_ADDR_I3C, P3T1755_ADDR_I3C << 1 );	
+	PRINTF( "\r\nRegister dump - I3C target address:7’h%02X (0x%02X)\r\n", P3T1755_ADDR_I3C, P3T1755_ADDR_I3C << 1 );	
 	PRINTF( "  - Temp   (0x0): 0x%04X (%8.4f˚C)\r\n", swap_bytes( t ), short2celsius( t ) );	
 	PRINTF( "  - Conf   (0x1): 0x  %02X\r\n", c );	
 	PRINTF( "  - T_LOW  (0x2): 0x%04X (%8.4f˚C)\r\n", swap_bytes( l ), short2celsius( l ) );	
