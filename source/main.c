@@ -51,7 +51,8 @@ int main(void)
 	PRINTF("\r\nI3C master example: reading P3T1755 data and get IBI\r\n");
 
 	//	Try DAA
-	i3c_change_target_address( P3T1755_ADDR_I2C, P3T1755_ADDR_I3C << 1 );
+	ccc_broadcast( CCC_BROADCAST_RSTDAA, NULL, 0 ); // Reset DAA
+	ccc_set( CCC_DIRECT_SETDASA, P3T1755_ADDR_I2C, P3T1755_ADDR_I3C << 1 ); // Set Dynamic Address from Static Address
 
 	float	temp;
 	temp	= temp_sensor_setting( P3T1755_ADDR_I3C, P3T1755_CONFIG_VALUE );

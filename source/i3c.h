@@ -34,7 +34,6 @@ status_t	i3c_reg_read( uint8_t targ, uint8_t reg, uint8_t *dp, int length );
 status_t	i3c_write( uint8_t targ, const uint8_t *dp, int length, bool stop );
 status_t	i3c_read( uint8_t targ, uint8_t *dp, int length, bool stop );
 status_t	i3c_xfer( i3c_direction_t dir, i3c_bus_type_t type, uint8_t targ, uint8_t *dp, int length, bool stop );
-status_t	i3c_change_target_address( uint8_t old_addr, uint8_t new_addr );
 uint8_t		i3c_check_IBI( void );
 
 status_t	ccc_broadcast( uint8_t ccc, const uint8_t *dp, uint8_t length );

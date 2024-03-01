@@ -74,12 +74,6 @@ status_t i3c_read( uint8_t targ, uint8_t *dp, int length, bool stop )
 	return i3c_xfer( kI3C_Read, kI3C_TypeI3CSdr, targ, dp, length, stop );
 }
 
-status_t i3c_change_target_address( uint8_t old_addr, uint8_t new_addr )
-{
-	ccc_broadcast( CCC_BROADCAST_RSTDAA, NULL, 0 );
-	ccc_set( CCC_DIRECT_SETDASA, old_addr, new_addr );
-}
-
 status_t i3c_xfer( i3c_direction_t dir, i3c_bus_type_t type, uint8_t targ, uint8_t *dp, int length, bool stop )
 {
 	i3c_master_transfer_t masterXfer = {0};
