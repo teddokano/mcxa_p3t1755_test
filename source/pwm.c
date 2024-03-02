@@ -103,22 +103,7 @@ int pwm_start(void)
 	INPUTMUX_AttachSignal(INPUTMUX0, 1U, kINPUTMUX_TrigIn1ToFlexPwm0Fault);
 	INPUTMUX_AttachSignal(INPUTMUX0, 2U, kINPUTMUX_TrigIn2ToFlexPwm0Fault);	
 	INPUTMUX_AttachSignal(INPUTMUX0, 3U, kINPUTMUX_TrigIn3ToFlexPwm0Fault);
-	
 
-	PRINTF("FlexPWM driver example\n");
-
-	/*
-	 * pwmConfig.enableDebugMode = false;
-	 * pwmConfig.enableWait = false;
-	 * pwmConfig.reloadSelect = kPWM_LocalReload;
-	 * pwmConfig.clockSource = kPWM_BusClock;
-	 * pwmConfig.prescale = kPWM_Prescale_Divide_1;
-	 * pwmConfig.initializationControl = kPWM_Initialize_LocalSync;
-	 * pwmConfig.forceTrigger = kPWM_Force_Local;
-	 * pwmConfig.reloadFrequency = kPWM_LoadEveryOportunity;
-	 * pwmConfig.reloadLogic = kPWM_ReloadImmediate;
-	 * pwmConfig.pairOperation = kPWM_Independent;
-	 */
 	PWM_GetDefaultConfig(&pwmConfig);
 
 #ifdef DEMO_PWM_CLOCK_DEVIDER
@@ -193,42 +178,44 @@ int pwm_start(void)
 }
 
 
+
 void pwm_test( void )
 {
-	uint32_t pwmVal = 4;
-	static int count	= 1; 
-	
 	while (1U)
 	{
-		/* Delay at least 100 PWM periods. */
+		pwm_update();
 		SDK_DelayAtLeastUs((1000000U / APP_DEFAULT_PWM_FREQUENCE) * 10, SDK_DEVICE_MAXIMUM_CPU_CLOCK_FREQUENCY);
-
-		
-
-		/* Reset the duty cycle percentage */
-		
-		if ( 200 < count )
-		{
-			count	= 1;
-			pwmVal	= 1;
-		}
-		if ( 100 < count )
-		{
-			pwmVal = 200 - count;
-		}
-		else
-		{
-			pwmVal = count;
-		}
-
-		count++;
-		
-		/* Update duty cycles for all 3 PWM signals */
-		PWM_UpdatePwmDutycycle(BOARD_PWM_BASEADDR, kPWM_Module_0, kPWM_PwmA, kPWM_SignedCenterAligned, pwmVal);
-		PWM_UpdatePwmDutycycle(BOARD_PWM_BASEADDR, kPWM_Module_1, kPWM_PwmA, kPWM_SignedCenterAligned, (pwmVal >> 1));
-		PWM_UpdatePwmDutycycle(BOARD_PWM_BASEADDR, kPWM_Module_2, kPWM_PwmA, kPWM_SignedCenterAligned, (pwmVal >> 2));
-
-		/* Set the load okay bit for all submodules to load registers from their buffer */
-		PWM_SetPwmLdok(BOARD_PWM_BASEADDR, kPWM_Control_Module_0 | kPWM_Control_Module_1 | kPWM_Control_Module_2, true);
 	}
+}
+
+
+void pwm_update( void )
+{
+	static int count	= 1; 
+	uint32_t pwmVal;
+
+	if ( 200 < count )
+	{
+		count	= 1;
+		pwmVal	= 1;
+	}
+	if ( 100 < count )
+	{
+		pwmVal = 200 - count;
+	}
+	else
+	{
+		pwmVal = count;
+	}
+
+	/* Update duty cycles for all 3 PWM signals */
+	PWM_UpdatePwmDutycycle(BOARD_PWM_BASEADDR, kPWM_Module_0, kPWM_PwmA, kPWM_SignedCenterAligned, pwmVal);
+	PWM_UpdatePwmDutycycle(BOARD_PWM_BASEADDR, kPWM_Module_1, kPWM_PwmA, kPWM_SignedCenterAligned, (pwmVal >> 1));
+	PWM_UpdatePwmDutycycle(BOARD_PWM_BASEADDR, kPWM_Module_2, kPWM_PwmA, kPWM_SignedCenterAligned, (pwmVal >> 2));
+
+	/* Set the load okay bit for all submodules to load registers from their buffer */
+	PWM_SetPwmLdok(BOARD_PWM_BASEADDR, kPWM_Control_Module_0 | kPWM_Control_Module_1 | kPWM_Control_Module_2, true);
+	
+	count++;
+
 }

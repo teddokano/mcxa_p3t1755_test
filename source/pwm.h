@@ -6,5 +6,5 @@
  */
 
 int pwm_start(void);
-
 void pwm_test( void );
+void pwm_update( void );

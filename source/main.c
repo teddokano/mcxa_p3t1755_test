@@ -53,7 +53,8 @@ static volatile int		timer_count	= 0;
 
 static void timer_callback(void)
 {
-	pin_led_control( timer_count );	
+//	pin_led_control( timer_count );
+	pwm_update();
 	timer_count++;
 }
 
@@ -62,9 +63,6 @@ int main(void)
 	init_MCU();
 	init_pins();
 	init_i3c( EXAMPLE_I2C_FREQ, EXAMPLE_I3C_OD_FREQ, EXAMPLE_I3C_PP_FREQ );
-	
-	UTICK_SetTick( UTICK0, kUTICK_Repeat, 100000 - 1, timer_callback );
-
 	
 	PRINTF("\r\nP3T1755 (Temperature sensor) I3C operation sample: getting temperature data and IBI\r\n");
 
@@ -84,8 +82,9 @@ int main(void)
 	set_IBI_callback( all_led_on );
 
 	pwm_start();
+	UTICK_SetTick( UTICK0, kUTICK_Repeat, 10000 - 1, timer_callback );
 
-	pwm_test();
+//	pwm_test();
 
 
 	while ( true )
