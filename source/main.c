@@ -17,11 +17,15 @@
 #include "clock_config.h"
 #include "board.h"
 
+#include "fsl_utick.h"
+#include "fsl_clock.h"
+#include "fsl_reset.h"
+
 #include "i3c.h"
 #include "p3t1755.h"
 #include "pin.h"
 
-#define	HIGHER_SCL_FREQ
+//#define	HIGHER_SCL_FREQ
 
 #ifdef	HIGHER_SCL_FREQ
 #define EXAMPLE_I3C_OD_FREQ		4000000UL
@@ -44,11 +48,26 @@ uint16_t	celsius2short( float v );
 uint16_t	swap_bytes( uint16_t v );
 void		wait( float delayTime_sec );
 
+static volatile bool	timer_int;
+static volatile int		timer_count	= 0;
+
+static void timer_callback(void)
+{
+	timer_int = true;
+	timer_count++;
+}
+
 int main(void)
 {
+	RESET_PeripheralReset( kUTICK0_RST_SHIFT_RSTn );
+
 	init_MCU();
 	init_pins();
 	init_i3c( EXAMPLE_I2C_FREQ, EXAMPLE_I3C_OD_FREQ, EXAMPLE_I3C_PP_FREQ );
+	
+	UTICK_Init( UTICK0 );
+	UTICK_SetTick( UTICK0, kUTICK_Repeat, 200000 - 1, timer_callback );
+
 	
 	PRINTF("\r\nP3T1755 (Temperature sensor) I3C operation sample: getting temperature data and IBI\r\n");
 
@@ -70,8 +89,10 @@ int main(void)
 	while ( true )
 	{
 		if ( (ibi_addr	= i3c_check_IBI()) )
-			PRINTF("*** IBI : Got IBI from target_address: 7’h%02X (0x%02X)\n", ibi_addr, ibi_addr << 1 );
+			PRINTF("*** IBI : Got IBI from target_address: 7’h%02X (0x%02X)\r\n", ibi_addr, ibi_addr << 1 );
 
+		PRINTF("(%d)", timer_count );
+		
 		temp	= read_temp( P3T1755_ADDR_I3C, P3T1755_REG_Temp );
 		
 		PRINTF( "Temperature: %8.4f˚C\r\n", temp );
