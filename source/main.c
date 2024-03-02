@@ -19,8 +19,9 @@
 
 #include "i3c.h"
 #include "p3t1755.h"
+#include "pin.h"
 
-#define	HIGHER_SCL_FREEQ
+//#define	HIGHER_SCL_FREEQ
 
 #ifdef	HIGHER_SCL_FREEQ
 #define EXAMPLE_I3C_OD_BAUDRATE		4000000
@@ -42,14 +43,12 @@ float		short2celsius( uint16_t v );
 uint16_t	celsius2short( float v );
 uint16_t	swap_bytes( uint16_t v );
 void		wait( float delayTime_sec );
-
-
-#define BOARD_LED_GPIO     BOARD_LED_RED_GPIO
-#define BOARD_LED_GPIO_PIN BOARD_LED_RED_GPIO_PIN
+void		init_pins( void );
 
 int main(void)
 {
 	init_MCU();
+	init_pins();
 	i3c_init( EXAMPLE_I2C_BAUDRATE, EXAMPLE_I3C_OD_BAUDRATE, EXAMPLE_I3C_PP_BAUDRATE );
 	
 	PRINTF("\r\nP3T1755 (Temperature sensor) I3C operation sample: getting temperature data and IBI\r\n");
@@ -66,23 +65,6 @@ int main(void)
 
 	uint8_t	ibi_addr;
 
-
-
-	   /* Define the init structure for the output LED pin*/
-	    gpio_pin_config_t led_config = {
-	        kGPIO_DigitalOutput,
-	        0,
-	    };
-
-
-	CLOCK_EnableClock( kCLOCK_GateGPIO3 );
-	GPIO_PinInit(BOARD_LED_GPIO, BOARD_LED_GPIO_PIN, &led_config);
-
-
-
-
-
-
 	while (1)
 	{
 		if ( (ibi_addr	= i3c_check_IBI()) )
@@ -91,6 +73,10 @@ int main(void)
 		temp	= read_temp( P3T1755_ADDR_I3C, P3T1755_REG_Temp );
 
 		PRINTF( "Temperature: %8.4f˚C\r\n", temp );
+		//pin_toggle( RED );
+		//pin_toggle( GREEN );
+		pin_toggle( BLUE );
+
 		wait( 1 );
 	}
 }
@@ -180,20 +166,51 @@ uint16_t swap_bytes( uint16_t v )
 
 void init_MCU( void )
 {
-
 	/* Attach clock to I3C 24MHZ */
 	CLOCK_SetClockDiv(kCLOCK_DivI3C0_FCLK, 2U);
 	CLOCK_AttachClk(kFRO_HF_DIV_to_I3C0FCLK);
 
-     /* Board pin, clock, debug console init */
-    CLOCK_EnableClock( kCLOCK_GateGPIO3 );
-
+	/* Board pin, clock, debug console init */
+	CLOCK_EnableClock( kCLOCK_GateGPIO3 );
 
 	BOARD_InitPins();
-//	BOARD_BootClockFRO48M();
-    BOARD_InitBootClocks();
-
+	//BOARD_BootClockFRO48M();
+	BOARD_InitBootClocks();
 	BOARD_InitDebugConsole();
+}
+
+void init_pins( void )
+{
+	/* Define the init structure for the output LED pin*/
+	 gpio_pin_config_t led_config = { kGPIO_DigitalOutput, 0 };
+
+	init_pin( RED,		PIN_OUTPUT );
+	init_pin( GREEN,	PIN_OUTPUT );
+	init_pin( BLUE,		PIN_OUTPUT );
+
+	pin_write( RED,		true );
+	pin_write( GREEN,	true );
+	pin_write( BLUE,	true );
+	
+	pin_write( RED,		false );
+	wait( 0.2 );
+	pin_write( RED,		true );
+	wait( 0.2 );
+
+	pin_write( GREEN,	false );
+	wait( 0.2 );
+	pin_write( GREEN,	true );
+	wait( 0.2 );
+
+	pin_write( BLUE,	false );
+	wait( 0.2 );
+	pin_write( BLUE,	true );
+	wait( 0.2 );
+	
+	pin_write( RED,		true );
+	pin_write( GREEN,	true );
+	pin_write( BLUE,	true );
+	
 }
 
 void wait( float delayTime_sec )
