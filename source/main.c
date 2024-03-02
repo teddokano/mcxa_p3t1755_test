@@ -33,8 +33,6 @@
 
 #define EXAMPLE_I2C_BAUDRATE		400000
 
-#define	IBI_TRIGGER_OUTPUT			D2
-
 void		init_MCU( void );
 void		init_I3C( void );
 float		temp_sensor_setting( uint8_t addr, uint8_t config );
@@ -45,9 +43,6 @@ float		short2celsius( uint16_t v );
 uint16_t	celsius2short( float v );
 uint16_t	swap_bytes( uint16_t v );
 void		wait( float delayTime_sec );
-void		init_pins( void );
-void		set_led_color( float temp, float ref );
-void		all_led_on( void );
 
 int main(void)
 {
@@ -72,7 +67,7 @@ int main(void)
 	
 	set_IBI_callback( all_led_on );
 
-	while (1)
+	while ( true )
 	{
 		if ( (ibi_addr	= i3c_check_IBI()) )
 			PRINTF("*** IBI : Got IBI from target_address: 7’h%02X (0x%02X)\n", ibi_addr, ibi_addr << 1 );
@@ -184,53 +179,7 @@ void init_MCU( void )
 	BOARD_InitDebugConsole();
 }
 
-void init_pins( void )
-{
-	uint8_t	pins[]	= { RED, GREEN, BLUE };
-
-	for ( int i = 0; i < sizeof( pins ); i++ )
-	{
-		init_pin( pins[ i ], PIN_OUTPUT );
-		pin_write( pins[ i ], false ); wait( 0.1 );
-		pin_write( pins[ i ], true  ); wait( 0.1 );
-	}
-	
-	init_pin( IBI_TRIGGER_OUTPUT, PIN_OUTPUT );	
-}
-
 void wait( float delayTime_sec )
 {
 	SDK_DelayAtLeastUs( (uint32_t)(delayTime_sec * 1000000.0), CLOCK_GetCoreSysClkFreq() );
-}
-
-void set_led_color( float temp, float ref )
-{
-	if ( (ref + 2) < temp )
-	{
-		pin_write( RED,   PIN_LED_ON  );
-		pin_write( GREEN, PIN_LED_OFF );
-		pin_write( BLUE,  PIN_LED_OFF );
-	}
-	else if ( (ref + 1) < temp )
-	{
-		pin_write( RED,   PIN_LED_OFF );
-		pin_write( GREEN, PIN_LED_ON  );
-		pin_write( BLUE,  PIN_LED_OFF );
-	}
-	else
-	{
-		pin_write( RED,   PIN_LED_OFF );
-		pin_write( GREEN, PIN_LED_OFF );
-		pin_write( BLUE,  PIN_LED_ON  );
-	}
-	
-	pin_write( IBI_TRIGGER_OUTPUT, true );
-}
-
-void all_led_on( void )
-{
-	pin_write( IBI_TRIGGER_OUTPUT, false );
-	pin_write( RED,   PIN_LED_ON );
-	pin_write( GREEN, PIN_LED_ON );
-	pin_write( BLUE,  PIN_LED_ON );
 }

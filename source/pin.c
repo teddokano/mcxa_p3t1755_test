@@ -49,3 +49,49 @@ void pin_write( int num, bool value )
 {
 	GPIO_PinWrite( pins[ num ].base, pins[ num ].pin, value );
 }
+
+void init_pins( void )
+{
+	uint8_t	pins[]	= { RED, GREEN, BLUE };
+
+	for ( int i = 0; i < sizeof( pins ); i++ )
+	{
+		init_pin( pins[ i ], PIN_OUTPUT );
+		pin_write( pins[ i ], false ); wait( 0.1 );
+		pin_write( pins[ i ], true  ); wait( 0.1 );
+	}
+	
+	init_pin( IBI_TRIGGER_OUTPUT, PIN_OUTPUT );	
+}
+
+void set_led_color( float temp, float ref )
+{
+	if ( (ref + 2) < temp )
+	{
+		pin_write( RED,   PIN_LED_ON  );
+		pin_write( GREEN, PIN_LED_OFF );
+		pin_write( BLUE,  PIN_LED_OFF );
+	}
+	else if ( (ref + 1) < temp )
+	{
+		pin_write( RED,   PIN_LED_OFF );
+		pin_write( GREEN, PIN_LED_ON  );
+		pin_write( BLUE,  PIN_LED_OFF );
+	}
+	else
+	{
+		pin_write( RED,   PIN_LED_OFF );
+		pin_write( GREEN, PIN_LED_OFF );
+		pin_write( BLUE,  PIN_LED_ON  );
+	}
+	
+	pin_write( IBI_TRIGGER_OUTPUT, true );
+}
+
+void all_led_on( void )
+{
+	pin_write( IBI_TRIGGER_OUTPUT, false );
+	pin_write( RED,   PIN_LED_ON );
+	pin_write( GREEN, PIN_LED_ON );
+	pin_write( BLUE,  PIN_LED_ON );
+}
