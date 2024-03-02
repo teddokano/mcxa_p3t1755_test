@@ -21,10 +21,10 @@
 #include "fsl_clock.h"
 #include "fsl_reset.h"
 
-#include "i3c.h"
+#include "i3c/i3c.h"
 #include "p3t1755.h"
-#include "pin.h"
-#include "pwm.h"
+#include "led_control/pin.h"
+#include "led_control/pwm.h"
 
 //#define	HIGHER_SCL_FREQ
 
