@@ -66,6 +66,7 @@ int main(void)
 		temp	= read_temp( P3T1755_ADDR_I3C, P3T1755_REG_Temp );
 		PRINTF( "Temperature: %8.4f˚C\r\n", temp );
 		demo( temp, &ref_temp, temp_sensor_setting );
+		PRINTF( "Reference temperature: %8.4f˚C\r\n", ref_temp );
 		wait( 1 );
 	}
 }

@@ -10,7 +10,7 @@
 #include	"demo/led_control.h"
 #include	"p3t1755.h"
 
-#define	LENGTH		60
+#define	LENGTH		10
 #define	THRESHOLD	1.0
 
 static float	samples[ LENGTH ];
@@ -25,24 +25,26 @@ void init_demo( void )
 
 void demo( float temp, float *ref_temp_ptr, float (*func_ptr)(uint8_t,uint8_t) )
 {
-	static int		index				= 0;
-	float			min					= 125.0;
+	static uint32_t		index	= 0;
+	float				avg		= 0.0;
+	uint32_t			lim;
 
 	led_set_color( temp, *ref_temp_ptr );
 	
-	index	%= LENGTH;
+	samples[ index++ % LENGTH ]	= temp;
 
-	samples[ index++ ]	= temp;
+	lim	= (index < LENGTH) ? index : LENGTH;
+	
+	for ( int i = 0; i < lim; i++ )
+		avg	+= samples[ i ];
+	
+	avg	/= lim;
 
-	for ( int i = 0; i < LENGTH; i++ )
-		min	= (samples[ i ] < min) ? samples[ i ] : min;
-
-	if ( ((*ref_temp_ptr - THRESHOLD) < min) && (min < (*ref_temp_ptr + THRESHOLD)) )
+	if ( ((*ref_temp_ptr - THRESHOLD) < avg) && (avg < (*ref_temp_ptr + THRESHOLD)) )
 		return;
 
-	*ref_temp_ptr	= min;
-	
+	*ref_temp_ptr	= avg;
 	PRINTF( "Minimum temperature for last %d samples are changed\r\n", LENGTH );
-
-	func_ptr( P3T1755_ADDR_I3C, P3T1755_CONFIG_VALUE );
+	
+	func_ptr( P3T1755_ADDR_I3C, P3T1755_CONFIG_VALUE );;
 }
