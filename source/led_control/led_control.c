@@ -12,8 +12,9 @@
 #include	"led_control/pwm.h"
 #include	"led_control/led_control.h"
 
-void init_pins( void );
+int target_led	= BLUE;
 
+void init_pins( void );
 
 static void led_control_callback(void)
 {
@@ -21,9 +22,11 @@ static void led_control_callback(void)
 	int			c200;
 	uint32_t	pwmVal;
 	
-	c200	= count % 200;	
+	c200	= (BLUE == target_led) ? count % 200 : 100;
 	pwm_update( (100 < c200) ? 200 - c200 : c200 );
 
+	led_pin_control( count );
+	
 	count++;
 }
 
@@ -49,9 +52,7 @@ void init_pins( void )
 	init_pin( IBI_TRIGGER_OUTPUT, PIN_OUTPUT );	
 }
 
-volatile int target_led	= BLUE;
-
-void led_set_color0( float temp, float ref )
+void led_set_color( float temp, float ref )
 {
 	if ( (ref + 2) < temp )
 	{
@@ -68,7 +69,7 @@ void led_set_color0( float temp, float ref )
 	pin_write( IBI_TRIGGER_OUTPUT, true );
 }
 
-void led_set_color( float temp, float ref )
+void led_set_color2( float temp, float ref )
 {
 	if ( (ref + 2) < temp )
 	{
@@ -102,9 +103,11 @@ void led_all( bool v )
 
 void led_pin_control( int v )
 {
-	if ( !(v % 2) )
+	static const int k	= 32;
+	
+	v	%= k;
+	if ( v < (k - 5) )
 		led_all( PIN_LED_OFF );
-
-	if ( v % 2 )
-	pin_write( target_led, PIN_LED_ON );
+	else
+		pin_write( target_led, PIN_LED_ON );
 }
