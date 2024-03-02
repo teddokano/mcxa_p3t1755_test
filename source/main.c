@@ -175,11 +175,11 @@ void init_MCU( void )
 	CLOCK_SetClockDiv(kCLOCK_DivI3C0_FCLK, 2U);
 	CLOCK_AttachClk(kFRO_HF_DIV_to_I3C0FCLK);
 
-	/* Board pin, clock, debug console init */
+	CLOCK_EnableClock( kCLOCK_GateGPIO1 );
 	CLOCK_EnableClock( kCLOCK_GateGPIO3 );
+	CLOCK_EnableClock( kCLOCK_GateGPIO2 );
 
 	BOARD_InitPins();
-	//BOARD_BootClockFRO48M();
 	BOARD_InitBootClocks();
 	BOARD_InitDebugConsole();
 }
@@ -194,6 +194,8 @@ void init_pins( void )
 		pin_write( pins[ i ], false ); wait( 0.1 );
 		pin_write( pins[ i ], true  ); wait( 0.1 );
 	}
+	
+	init_pin( IBI_TRIGGER_OUTPUT, PIN_OUTPUT );	
 }
 
 void wait( float delayTime_sec )
@@ -220,11 +222,14 @@ void set_led_color( float temp, float ref )
 		pin_write( RED,   PIN_LED_OFF );
 		pin_write( GREEN, PIN_LED_OFF );
 		pin_write( BLUE,  PIN_LED_ON  );
-	}	
+	}
+	
+	pin_write( IBI_TRIGGER_OUTPUT, true );
 }
 
 void all_led_on( void )
 {
+	pin_write( IBI_TRIGGER_OUTPUT, false );
 	pin_write( RED,   PIN_LED_ON );
 	pin_write( GREEN, PIN_LED_ON );
 	pin_write( BLUE,  PIN_LED_ON );
