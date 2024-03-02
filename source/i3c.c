@@ -28,6 +28,9 @@ i3c_master_handle_t		g_i3c_m_handle;
 volatile bool			g_masterCompletionFlag;
 volatile status_t		g_completionStatus;
 
+i3c_func_ptr			g_ibi_callback	= NULL;
+
+
 static void i3c_master_ibi_callback(	I3C_Type			*base, 
 										i3c_master_handle_t	*handle, 
 										i3c_ibi_type_t		ibiType, 
@@ -106,6 +109,12 @@ void i3c_init( uint32_t i2c_freq, uint32_t i3c_od_freq, uint32_t i3c_pp_freq )
 	I3C_MasterTransferCreateHandle( EXAMPLE_MASTER, &g_i3c_m_handle, &masterCallback, NULL );
 }
 
+void set_IBI_callback( i3c_func_ptr fp )
+{
+	g_ibi_callback	= fp;
+}
+
+
 status_t ccc_broadcast( uint8_t ccc, const uint8_t *dp, uint8_t length )
 {
 	uint8_t	bp[ REG_RW_BUFFER_SIZE ];
@@ -161,6 +170,9 @@ static void i3c_master_ibi_callback( I3C_Type *base, i3c_master_handle_t *handle
 			assert(false);
 			break;
 	}
+	
+	if ( g_ibi_callback )
+		g_ibi_callback();
 }
 
 static void i3c_master_callback( I3C_Type *base, i3c_master_handle_t *handle, status_t status, void *userData )

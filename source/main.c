@@ -33,6 +33,8 @@
 
 #define EXAMPLE_I2C_BAUDRATE		400000
 
+#define	IBI_TRIGGER_OUTPUT			D2
+
 void		init_MCU( void );
 void		init_I3C( void );
 float		temp_sensor_setting( uint8_t addr, uint8_t config );
@@ -44,6 +46,8 @@ uint16_t	celsius2short( float v );
 uint16_t	swap_bytes( uint16_t v );
 void		wait( float delayTime_sec );
 void		init_pins( void );
+void		set_led_color( float temp, float ref );
+void		all_led_on( void );
 
 int main(void)
 {
@@ -57,13 +61,16 @@ int main(void)
 	ccc_broadcast( CCC_BROADCAST_RSTDAA, NULL, 0 ); // Reset DAA
 	ccc_set( CCC_DIRECT_SETDASA, P3T1755_ADDR_I2C, P3T1755_ADDR_I3C << 1 ); // Set Dynamic Address from Static Address
 
-	float	temp;
-	temp	= temp_sensor_setting( P3T1755_ADDR_I3C, P3T1755_CONFIG_VALUE );
-	PRINTF( "  T_HIGH and T_LOW registers are set based on current temperature: %8.4f˚C\r\n", temp );
+	float	ref_temp;
+	ref_temp	= temp_sensor_setting( P3T1755_ADDR_I3C, P3T1755_CONFIG_VALUE );
+	PRINTF( "  T_HIGH and T_LOW registers are set based on current temperature: %8.4f˚C\r\n", ref_temp );
 	
 	temp_sensor_reg_dump( P3T1755_ADDR_I3C );
 
+	float	temp;
 	uint8_t	ibi_addr;
+	
+	set_IBI_callback( all_led_on );
 
 	while (1)
 	{
@@ -71,12 +78,10 @@ int main(void)
 			PRINTF("*** IBI : Got IBI from target_address: 7’h%02X (0x%02X)\n", ibi_addr, ibi_addr << 1 );
 
 		temp	= read_temp( P3T1755_ADDR_I3C, P3T1755_REG_Temp );
-
+		
 		PRINTF( "Temperature: %8.4f˚C\r\n", temp );
-		//pin_toggle( RED );
-		//pin_toggle( GREEN );
-		pin_toggle( BLUE );
-
+		set_led_color( temp, ref_temp );
+		
 		wait( 1 );
 	}
 }
@@ -181,39 +186,46 @@ void init_MCU( void )
 
 void init_pins( void )
 {
-	/* Define the init structure for the output LED pin*/
-	 gpio_pin_config_t led_config = { kGPIO_DigitalOutput, 0 };
+	uint8_t	pins[]	= { RED, GREEN, BLUE };
 
-	init_pin( RED,		PIN_OUTPUT );
-	init_pin( GREEN,	PIN_OUTPUT );
-	init_pin( BLUE,		PIN_OUTPUT );
-
-	pin_write( RED,		true );
-	pin_write( GREEN,	true );
-	pin_write( BLUE,	true );
-	
-	pin_write( RED,		false );
-	wait( 0.2 );
-	pin_write( RED,		true );
-	wait( 0.2 );
-
-	pin_write( GREEN,	false );
-	wait( 0.2 );
-	pin_write( GREEN,	true );
-	wait( 0.2 );
-
-	pin_write( BLUE,	false );
-	wait( 0.2 );
-	pin_write( BLUE,	true );
-	wait( 0.2 );
-	
-	pin_write( RED,		true );
-	pin_write( GREEN,	true );
-	pin_write( BLUE,	true );
-	
+	for ( int i = 0; i < sizeof( pins ); i++ )
+	{
+		init_pin( pins[ i ], PIN_OUTPUT );
+		pin_write( pins[ i ], false ); wait( 0.1 );
+		pin_write( pins[ i ], true  ); wait( 0.1 );
+	}
 }
 
 void wait( float delayTime_sec )
 {
 	SDK_DelayAtLeastUs( (uint32_t)(delayTime_sec * 1000000.0), CLOCK_GetCoreSysClkFreq() );
+}
+
+void set_led_color( float temp, float ref )
+{
+	if ( (ref + 2) < temp )
+	{
+		pin_write( RED,   PIN_LED_ON  );
+		pin_write( GREEN, PIN_LED_OFF );
+		pin_write( BLUE,  PIN_LED_OFF );
+	}
+	else if ( (ref + 1) < temp )
+	{
+		pin_write( RED,   PIN_LED_OFF );
+		pin_write( GREEN, PIN_LED_ON  );
+		pin_write( BLUE,  PIN_LED_OFF );
+	}
+	else
+	{
+		pin_write( RED,   PIN_LED_OFF );
+		pin_write( GREEN, PIN_LED_OFF );
+		pin_write( BLUE,  PIN_LED_ON  );
+	}	
+}
+
+void all_led_on( void )
+{
+	pin_write( RED,   PIN_LED_ON );
+	pin_write( GREEN, PIN_LED_ON );
+	pin_write( BLUE,  PIN_LED_ON );
 }

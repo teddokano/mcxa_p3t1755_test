@@ -60,6 +60,9 @@ enum { D0, D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D18, D19 };
 #define	GREEN	D6
 #define	BLUE	D3
 
+#define	PIN_LED_OFF	true
+#define	PIN_LED_ON	false
+
 void init_pin( int num, int setting );
 void pin_toggle( int num );
 void pin_write( int num, bool value );
