@@ -7,7 +7,7 @@
 
 #include "fsl_gpio.h"
 
-#include "wait.h"
+#include "mcu.h"
 #include "pin.h"
 
 typedef	struct	_gpio_pin {

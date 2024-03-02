@@ -9,8 +9,10 @@
  *    "lpcxpresso860max_i3c_master_read_sensor_icm42688p" from SDK_2.15.000_LPCXpresso860MAX
  */
 
-#include "fsl_i3c.h"
-#include "i3c.h"
+#include	<string.h>
+
+#include	"fsl_i3c.h"
+#include	"i3c.h"
 
 #define	REG_RW_BUFFER_SIZE			10
 #define	IBI_PAYLOAD_BUFFER_SIZE		10

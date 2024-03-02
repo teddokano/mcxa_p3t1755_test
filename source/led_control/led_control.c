@@ -7,7 +7,7 @@
 
 #include	"fsl_utick.h"
 
-#include	"wait.h"
+#include	"mcu.h"
 #include	"led_control/pin.h"
 #include	"led_control/pwm.h"
 #include	"led_control/led_control.h"

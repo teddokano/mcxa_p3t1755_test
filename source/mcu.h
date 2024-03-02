@@ -5,4 +5,5 @@
  *
  */
 
+void	init_mcu( void );
 void	wait( float delayTime_sec );

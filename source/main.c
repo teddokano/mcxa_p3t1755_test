@@ -9,20 +9,10 @@
  *    "lpcxpresso860max_i3c_master_read_sensor_icm42688p" from SDK_2.15.000_LPCXpresso860MAX
  */
 
-#include <string.h>
-
 #include "fsl_debug_console.h"
-#include "fsl_i3c.h"
-#include "pin_mux.h"
-#include "clock_config.h"
-#include "board.h"
-
-#include "fsl_utick.h"
-#include "fsl_clock.h"
-#include "fsl_reset.h"
 
 #include "p3t1755.h"
-#include "wait.h"
+#include "mcu.h"
 #include "i3c/i3c.h"
 #include "led_control/led_control.h"
 
@@ -38,8 +28,7 @@
 
 #define EXAMPLE_I2C_FREQ		400000UL
 
-void		init_MCU( void );
-void		init_I3C( void );
+void		DAA_set_dynamic_ddress_from_static_ddress( uint8_t dynamic_address, uint8_t static_address );
 float		temp_sensor_setting( uint8_t addr, uint8_t config );
 void		temp_sensor_reg_dump( uint8_t addr );
 float		read_temp( uint8_t targ, uint8_t reg );
@@ -51,16 +40,14 @@ void		wait( float delayTime_sec );
 
 int main(void)
 {
-	init_MCU();
+	init_mcu();
 	init_led();
 	init_i3c( EXAMPLE_I2C_FREQ, EXAMPLE_I3C_OD_FREQ, EXAMPLE_I3C_PP_FREQ );
 	
 	PRINTF("\r\nP3T1755 (Temperature sensor) I3C operation sample: getting temperature data and IBI\r\n");
 
-	//	Try DAA
-	ccc_broadcast( CCC_BROADCAST_RSTDAA, NULL, 0 ); // Reset DAA
-	ccc_set( CCC_DIRECT_SETDASA, P3T1755_ADDR_I2C, P3T1755_ADDR_I3C << 1 ); // Set Dynamic Address from Static Address
-
+	DAA_set_dynamic_ddress_from_static_ddress( P3T1755_ADDR_I3C, P3T1755_ADDR_I2C );
+	
 	float	ref_temp;
 	ref_temp	= temp_sensor_setting( P3T1755_ADDR_I3C, P3T1755_CONFIG_VALUE );
 	PRINTF( "  T_HIGH and T_LOW registers are set based on current temperature: %8.4f˚C\r\n", ref_temp );
@@ -80,6 +67,12 @@ int main(void)
 		led_set_color( temp, ref_temp );
 		wait( 1 );
 	}
+}
+
+void DAA_set_dynamic_ddress_from_static_ddress( uint8_t dynamic_address, uint8_t static_address )
+{
+	ccc_broadcast( CCC_BROADCAST_RSTDAA, NULL, 0 ); // Reset DAA
+	ccc_set( CCC_DIRECT_SETDASA, static_address, dynamic_address << 1 ); // Set Dynamic Address from Static Address
 }
 
 float temp_sensor_setting( uint8_t addr, uint8_t config )
@@ -163,23 +156,4 @@ uint16_t swap_bytes( uint16_t v )
 #else	
 	return (v << 8) | (v >> 8);
 #endif
-}
-
-void init_MCU( void )
-{
-	/* Attach clock to I3C 24MHZ */
-	CLOCK_SetClockDiv(kCLOCK_DivI3C0_FCLK, 2U);
-	CLOCK_AttachClk(kFRO_HF_DIV_to_I3C0FCLK);
-
-	CLOCK_EnableClock( kCLOCK_GateGPIO1 );
-	CLOCK_EnableClock( kCLOCK_GateGPIO3 );
-	CLOCK_EnableClock( kCLOCK_GateGPIO2 );
-
-	RESET_PeripheralReset( kUTICK0_RST_SHIFT_RSTn );
-
-	BOARD_InitPins();
-	BOARD_InitBootClocks();
-	BOARD_InitDebugConsole();
-
-	UTICK_Init( UTICK0 );
 }
