@@ -184,33 +184,17 @@ int pwm_start(void)
 
 void pwm_test( void )
 {
+	uint32_t	dummy	= 50;
 	while (1U)
 	{
-		pwm_update();
+		pwm_update( dummy );
 		SDK_DelayAtLeastUs((1000000U / APP_DEFAULT_PWM_FREQUENCE) * 10, SDK_DEVICE_MAXIMUM_CPU_CLOCK_FREQUENCY);
 	}
 }
 
 
-void pwm_update( void )
+void pwm_update( uint32_t pwmVal )
 {
-	static int count	= 1; 
-	uint32_t pwmVal;
-
-	if ( 200 < count )
-	{
-		count	= 1;
-		pwmVal	= 1;
-	}
-	if ( 100 < count )
-	{
-		pwmVal = 200 - count;
-	}
-	else
-	{
-		pwmVal = count;
-	}
-
 	/* Update duty cycles for all 3 PWM signals */
 	PWM_UpdatePwmDutycycle(BOARD_PWM_BASEADDR, kPWM_Module_0, kPWM_PwmA, kPWM_SignedCenterAligned, pwmVal);
 	PWM_UpdatePwmDutycycle(BOARD_PWM_BASEADDR, kPWM_Module_1, kPWM_PwmA, kPWM_SignedCenterAligned, (pwmVal >> 1));
@@ -218,8 +202,5 @@ void pwm_update( void )
 
 	/* Set the load okay bit for all submodules to load registers from their buffer */
 	PWM_SetPwmLdok(BOARD_PWM_BASEADDR, kPWM_Control_Module_0 | kPWM_Control_Module_1 | kPWM_Control_Module_2, true);
-	
-	count++;
-
 }
 

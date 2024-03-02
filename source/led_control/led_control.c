@@ -17,7 +17,14 @@ void init_pins( void );
 
 static void led_control_callback(void)
 {
-	pwm_update();
+	static int	count	= 0;
+	int			c200;
+	uint32_t	pwmVal;
+	
+	c200	= count % 200;	
+	pwm_update( (100 < c200) ? 200 - c200 : c200 );
+
+	count++;
 }
 
 
