@@ -21,17 +21,17 @@
 #include "p3t1755.h"
 #include "pin.h"
 
-//#define	HIGHER_SCL_FREEQ
+#define	HIGHER_SCL_FREQ
 
-#ifdef	HIGHER_SCL_FREEQ
-#define EXAMPLE_I3C_OD_BAUDRATE		4000000
-#define EXAMPLE_I3C_PP_BAUDRATE		12500000
+#ifdef	HIGHER_SCL_FREQ
+#define EXAMPLE_I3C_OD_FREQ		4000000UL
+#define EXAMPLE_I3C_PP_FREQ		12500000UL
 #else
-#define EXAMPLE_I3C_OD_BAUDRATE		1500000
-#define EXAMPLE_I3C_PP_BAUDRATE		4000000
-#endif //HIGHER_SCL_FREEQ
+#define EXAMPLE_I3C_OD_FREQ		1500000UL
+#define EXAMPLE_I3C_PP_FREQ		4000000UL
+#endif //HIGHER_SCL_FREQ
 
-#define EXAMPLE_I2C_BAUDRATE		400000
+#define EXAMPLE_I2C_FREQ		400000UL
 
 void		init_MCU( void );
 void		init_I3C( void );
@@ -48,7 +48,7 @@ int main(void)
 {
 	init_MCU();
 	init_pins();
-	init_i3c( EXAMPLE_I2C_BAUDRATE, EXAMPLE_I3C_OD_BAUDRATE, EXAMPLE_I3C_PP_BAUDRATE );
+	init_i3c( EXAMPLE_I2C_FREQ, EXAMPLE_I3C_OD_FREQ, EXAMPLE_I3C_PP_FREQ );
 	
 	PRINTF("\r\nP3T1755 (Temperature sensor) I3C operation sample: getting temperature data and IBI\r\n");
 
