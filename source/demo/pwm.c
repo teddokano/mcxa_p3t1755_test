@@ -15,7 +15,7 @@
 #include "fsl_device_registers.h"
 #include "fsl_inputmux.h"
 
-#include	"led_control/pwm.h"
+#include	"demo/pwm.h"
 
 /*******************************************************************************
  * Definitions

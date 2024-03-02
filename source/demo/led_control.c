@@ -8,9 +8,9 @@
 #include	"fsl_utick.h"
 
 #include	"mcu.h"
-#include	"led_control/pin.h"
-#include	"led_control/pwm.h"
-#include	"led_control/led_control.h"
+#include	"demo/pin.h"
+#include	"demo/pwm.h"
+#include	"demo/led_control.h"
 
 int target_led	= BLUE;
 

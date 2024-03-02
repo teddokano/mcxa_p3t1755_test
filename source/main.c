@@ -14,7 +14,8 @@
 #include "p3t1755.h"
 #include "mcu.h"
 #include "i3c/i3c.h"
-#include "led_control/led_control.h"
+#include "demo/led_control.h"
+#include "demo/demo.h"
 
 //#define	HIGHER_SCL_FREQ
 
@@ -41,7 +42,7 @@ void		wait( float delayTime_sec );
 int main(void)
 {
 	init_mcu();
-	init_led();
+	init_demo();
 	init_i3c( EXAMPLE_I2C_FREQ, EXAMPLE_I3C_OD_FREQ, EXAMPLE_I3C_PP_FREQ );
 	
 	PRINTF("\r\nP3T1755 (Temperature sensor) I3C operation sample: getting temperature data and IBI\r\n");
@@ -50,7 +51,7 @@ int main(void)
 	
 	float	ref_temp;
 	ref_temp	= temp_sensor_setting( P3T1755_ADDR_I3C, P3T1755_CONFIG_VALUE );
-	PRINTF( "  T_HIGH and T_LOW registers are set based on current temperature: %8.4f˚C\r\n", ref_temp );
+	PRINTF( "  T_LOW / T_HIGH registers are set based on current temperature: %8.4f˚C\r\n", ref_temp );
 	
 	temp_sensor_reg_dump( P3T1755_ADDR_I3C );
 
@@ -64,7 +65,7 @@ int main(void)
 
 		temp	= read_temp( P3T1755_ADDR_I3C, P3T1755_REG_Temp );
 		PRINTF( "Temperature: %8.4f˚C\r\n", temp );
-		led_set_color( temp, ref_temp );
+		demo( temp, &ref_temp, temp_sensor_setting );
 		wait( 1 );
 	}
 }
@@ -90,6 +91,8 @@ float temp_sensor_setting( uint8_t addr, uint8_t config )
 
 	//	Enable IBI
 	ccc_set( CCC_DIRECT_ENEC, addr, 0x01 );
+
+	PRINTF( "  T_LOW / T_HIGH registers updated: %8.4f˚C / %8.4f˚C\r\n", low, high );
 
 	return temp;
 }
