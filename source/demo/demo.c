@@ -26,7 +26,11 @@ void init_demo( void )
 void demo( float temp, float *ref_temp_ptr, float (*func_ptr)(uint8_t,uint8_t) )
 {
 	static uint32_t		index	= 0;
-	float				avg		= 0.0;
+	float				max		= -125.0;
+	float				min		=  125.0;
+	float				avg		=    0.0;
+	float				tmp;
+	float				compare;
 	uint32_t			lim;
 
 	led_set_color( temp, *ref_temp_ptr );
@@ -36,11 +40,20 @@ void demo( float temp, float *ref_temp_ptr, float (*func_ptr)(uint8_t,uint8_t) )
 	lim	= (index < LENGTH) ? index : LENGTH;
 	
 	for ( int i = 0; i < lim; i++ )
+	{
+		tmp	 = samples[ i ];
+
+		max	 = (max < tmp) ? tmp : max;
+		min	 = (tmp < min) ? tmp : min;
 		avg	+= samples[ i ];
+	}
 	
 	avg	/= lim;
+	
+	compare	= min;
 
-	if ( ((*ref_temp_ptr - THRESHOLD) < avg) && (avg < (*ref_temp_ptr + THRESHOLD)) )
+	//if ( ((*ref_temp_ptr - THRESHOLD) < avg) && (avg < (*ref_temp_ptr + THRESHOLD)) )
+	if ( ((*ref_temp_ptr - THRESHOLD) < compare) && (compare < (*ref_temp_ptr + THRESHOLD)) )
 		return;
 
 	*ref_temp_ptr	= avg;

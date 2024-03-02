@@ -34,19 +34,18 @@ float		temp_sensor_setting( uint8_t addr, uint8_t config );
 void		temp_sensor_reg_dump( uint8_t addr );
 float		read_temp( uint8_t targ, uint8_t reg );
 void		write_temp( uint8_t targ, uint8_t reg, float v );
-float		short2celsius( uint16_t v );
-uint16_t	celsius2short( float v );
-uint16_t	swap_bytes( uint16_t v );
+float		short2celsius( int16_t v );
+int16_t		celsius2short( float v );
+int16_t		swap_bytes( int16_t v );
 void		wait( float delayTime_sec );
 
 int main(void)
 {
 	init_mcu();
 	init_demo();
-	init_i3c( EXAMPLE_I2C_FREQ, EXAMPLE_I3C_OD_FREQ, EXAMPLE_I3C_PP_FREQ );
-	
+	init_i3c( EXAMPLE_I2C_FREQ, EXAMPLE_I3C_OD_FREQ, EXAMPLE_I3C_PP_FREQ );	
 	PRINTF("\r\nP3T1755 (Temperature sensor) I3C operation sample: getting temperature data and IBI\r\n");
-
+	
 	DAA_set_dynamic_ddress_from_static_ddress( P3T1755_ADDR_I3C, P3T1755_ADDR_I2C );
 	
 	float	ref_temp;
@@ -66,7 +65,6 @@ int main(void)
 		temp	= read_temp( P3T1755_ADDR_I3C, P3T1755_REG_Temp );
 		PRINTF( "Temperature: %8.4f˚C\r\n", temp );
 		demo( temp, &ref_temp, temp_sensor_setting );
-		PRINTF( "Reference temperature: %8.4f˚C\r\n", ref_temp );
 		wait( 1 );
 	}
 }
@@ -132,7 +130,7 @@ float read_temp( uint8_t targ, uint8_t reg )
 {
 	uint16_t	tmp;
 	i3c_reg_read( targ, reg, (uint8_t *)&tmp, sizeof( tmp ) );
-	
+
 	return short2celsius( tmp );
 }
 
@@ -142,22 +140,22 @@ void write_temp( uint8_t targ, uint8_t reg, float v )
 	i3c_reg_write( targ, reg, (uint8_t *)&tmp, sizeof( tmp ) );
 }
 
-float short2celsius( uint16_t v )
+float short2celsius( int16_t v )
 {
 	static const float	k	= 1 / 256.0;
 	return (float)(swap_bytes( v )) * k;
 }
 
-uint16_t celsius2short( float v )
+int16_t celsius2short( float v )
 {
 	return swap_bytes( (uint16_t)(v * 256.0) );
 }
 
-uint16_t swap_bytes( uint16_t v )
+int16_t swap_bytes( int16_t v )
 {
 #ifdef __BIG_ENDIAN__
 	return v;
 #else	
-	return (v << 8) | (v >> 8);
+	return (v << 8) | ((uint16_t)v >> 8);
 #endif
 }
