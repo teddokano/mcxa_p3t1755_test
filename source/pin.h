@@ -71,4 +71,7 @@ void	pin_write( int num, bool value );
 
 void	init_pins( void );
 void	set_led_color( float temp, float ref );
+void	all_led( bool v );
 void	all_led_on( void );
+void pin_led_control( int v );
+void wait( float delayTime_sec );

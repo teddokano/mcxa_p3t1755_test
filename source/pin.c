@@ -64,7 +64,26 @@ void init_pins( void )
 	init_pin( IBI_TRIGGER_OUTPUT, PIN_OUTPUT );	
 }
 
+volatile int target_led	= BLUE;
+
 void set_led_color( float temp, float ref )
+{
+	if ( (ref + 2) < temp )
+	{
+		target_led	= RED;
+	}
+	else if ( (ref + 1) < temp )
+	{
+		target_led	= GREEN;
+	}
+	else
+	{
+		target_led	= BLUE;
+	}
+	pin_write( IBI_TRIGGER_OUTPUT, true );
+}
+
+void set_led_color2( float temp, float ref )
 {
 	if ( (ref + 2) < temp )
 	{
@@ -88,10 +107,31 @@ void set_led_color( float temp, float ref )
 	pin_write( IBI_TRIGGER_OUTPUT, true );
 }
 
+
 void all_led_on( void )
 {
+	all_led( PIN_LED_ON );
+}
+
+void all_led( bool v )
+{
 	pin_write( IBI_TRIGGER_OUTPUT, false );
-	pin_write( RED,   PIN_LED_ON );
-	pin_write( GREEN, PIN_LED_ON );
-	pin_write( BLUE,  PIN_LED_ON );
+	pin_write( RED,   v );
+	pin_write( GREEN, v );
+	pin_write( BLUE,  v );
+}
+
+void pin_led_control( int v )
+{
+	if ( !(v % 2) )
+		all_led( PIN_LED_OFF );
+
+	if ( v % 2 )
+	pin_write( target_led, PIN_LED_ON );
+}
+
+
+void wait( float delayTime_sec )
+{
+	SDK_DelayAtLeastUs( (uint32_t)(delayTime_sec * 1000000.0), CLOCK_GetCoreSysClkFreq() );
 }

@@ -48,25 +48,21 @@ uint16_t	celsius2short( float v );
 uint16_t	swap_bytes( uint16_t v );
 void		wait( float delayTime_sec );
 
-static volatile bool	timer_int;
 static volatile int		timer_count	= 0;
 
 static void timer_callback(void)
 {
-	timer_int = true;
+	pin_led_control( timer_count );	
 	timer_count++;
 }
 
 int main(void)
 {
-	RESET_PeripheralReset( kUTICK0_RST_SHIFT_RSTn );
-
 	init_MCU();
 	init_pins();
 	init_i3c( EXAMPLE_I2C_FREQ, EXAMPLE_I3C_OD_FREQ, EXAMPLE_I3C_PP_FREQ );
 	
-	UTICK_Init( UTICK0 );
-	UTICK_SetTick( UTICK0, kUTICK_Repeat, 200000 - 1, timer_callback );
+	UTICK_SetTick( UTICK0, kUTICK_Repeat, 100000 - 1, timer_callback );
 
 	
 	PRINTF("\r\nP3T1755 (Temperature sensor) I3C operation sample: getting temperature data and IBI\r\n");
@@ -94,10 +90,8 @@ int main(void)
 		PRINTF("(%d)", timer_count );
 		
 		temp	= read_temp( P3T1755_ADDR_I3C, P3T1755_REG_Temp );
-		
 		PRINTF( "Temperature: %8.4f˚C\r\n", temp );
 		set_led_color( temp, ref_temp );
-		
 		wait( 1 );
 	}
 }
@@ -195,12 +189,11 @@ void init_MCU( void )
 	CLOCK_EnableClock( kCLOCK_GateGPIO3 );
 	CLOCK_EnableClock( kCLOCK_GateGPIO2 );
 
+	RESET_PeripheralReset( kUTICK0_RST_SHIFT_RSTn );
+
 	BOARD_InitPins();
 	BOARD_InitBootClocks();
 	BOARD_InitDebugConsole();
-}
 
-void wait( float delayTime_sec )
-{
-	SDK_DelayAtLeastUs( (uint32_t)(delayTime_sec * 1000000.0), CLOCK_GetCoreSysClkFreq() );
+	UTICK_Init( UTICK0 );
 }
