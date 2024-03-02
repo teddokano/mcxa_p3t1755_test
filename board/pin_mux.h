@@ -43,6 +43,7 @@ void BOARD_InitBootPins(void);
 #define PORT2_PCR6_MUX_mux00 0x00u  /*!<@brief Pin Multiplex Control: Alternative 0 (GPIO) */
 #define PORT3_PCR30_MUX_mux00 0x00u /*!<@brief Pin Multiplex Control: Alternative 0 (GPIO) */
 #define PORT3_PCR31_MUX_mux00 0x00u /*!<@brief Pin Multiplex Control: Alternative 0 (GPIO) */
+#define PORT3_PCR7_MUX_mux101 0x05u /*!<@brief Pin Multiplex Control: Alternative 5 (chip-specific) */
 
 /*! @name PORT3_12 (number 38), ARD_D5
   @{ */
@@ -71,20 +72,6 @@ void BOARD_InitBootPins(void);
 #define BOARD_INITPINS_ARD_D6_PIN 13U                   /*!<@brief PORT pin number */
 #define BOARD_INITPINS_ARD_D6_PIN_MASK (1U << 13U)      /*!<@brief PORT pin mask */
                                                         /* @} */
-
-/*! @name PORT3_0 (number 46), ARD_D3
-  @{ */
-
-/* Symbols to be used with GPIO driver */
-#define BOARD_INITPINS_ARD_D3_GPIO GPIO3               /*!<@brief GPIO peripheral base pointer */
-#define BOARD_INITPINS_ARD_D3_GPIO_PIN 0U              /*!<@brief GPIO pin number */
-#define BOARD_INITPINS_ARD_D3_GPIO_PIN_MASK (1U << 0U) /*!<@brief GPIO pin mask */
-
-/* Symbols to be used with PORT driver */
-#define BOARD_INITPINS_ARD_D3_PORT PORT3               /*!<@brief PORT peripheral base pointer */
-#define BOARD_INITPINS_ARD_D3_PIN 0U                   /*!<@brief PORT pin number */
-#define BOARD_INITPINS_ARD_D3_PIN_MASK (1U << 0U)      /*!<@brief PORT pin mask */
-                                                       /* @} */
 
 /*! @name PORT1_8 (number 2), ARD_D18
   @{ */
@@ -336,6 +323,15 @@ void BOARD_InitBootPins(void);
 #define BOARD_INITPINS_ARD_D1_PORT PORT1               /*!<@brief PORT peripheral base pointer */
 #define BOARD_INITPINS_ARD_D1_PIN 5U                   /*!<@brief PORT pin number */
 #define BOARD_INITPINS_ARD_D1_PIN_MASK (1U << 5U)      /*!<@brief PORT pin mask */
+                                                       /* @} */
+
+/*! @name PORT3_0 (number 46), ARD_D3
+  @{ */
+
+/* Symbols to be used with PORT driver */
+#define BOARD_INITPINS_ARD_D3_PORT PORT3               /*!<@brief PORT peripheral base pointer */
+#define BOARD_INITPINS_ARD_D3_PIN 0U                   /*!<@brief PORT pin number */
+#define BOARD_INITPINS_ARD_D3_PIN_MASK (1U << 0U)      /*!<@brief PORT pin mask */
                                                        /* @} */
 
 /*!

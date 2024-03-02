@@ -24,6 +24,7 @@
 #include "i3c.h"
 #include "p3t1755.h"
 #include "pin.h"
+#include "pwm.h"
 
 //#define	HIGHER_SCL_FREQ
 
@@ -82,13 +83,16 @@ int main(void)
 	
 	set_IBI_callback( all_led_on );
 
+	pwm_start();
+
+	pwm_test();
+
+
 	while ( true )
 	{
 		if ( (ibi_addr	= i3c_check_IBI()) )
 			PRINTF("*** IBI : Got IBI from target_address: 7’h%02X (0x%02X)\r\n", ibi_addr, ibi_addr << 1 );
 
-		PRINTF("(%d)", timer_count );
-		
 		temp	= read_temp( P3T1755_ADDR_I3C, P3T1755_REG_Temp );
 		PRINTF( "Temperature: %8.4f˚C\r\n", temp );
 		set_led_color( temp, ref_temp );
