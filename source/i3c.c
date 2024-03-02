@@ -91,7 +91,7 @@ status_t i3c_xfer( i3c_direction_t dir, i3c_bus_type_t type, uint8_t targ, uint8
 	return I3C_MasterTransferBlocking( EXAMPLE_MASTER, &masterXfer );
 }
 
-void i3c_init( uint32_t i2c_freq, uint32_t i3c_od_freq, uint32_t i3c_pp_freq )
+void init_i3c( uint32_t i2c_freq, uint32_t i3c_od_freq, uint32_t i3c_pp_freq )
 {
 	i3c_master_config_t	masterConfig;
 
