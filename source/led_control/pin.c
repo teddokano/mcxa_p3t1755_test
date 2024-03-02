@@ -7,6 +7,7 @@
 
 #include "fsl_gpio.h"
 
+#include "wait.h"
 #include "pin.h"
 
 typedef	struct	_gpio_pin {
@@ -35,103 +36,26 @@ static gpio_pin pins[]	= {
 
 void init_pin( int num, int setting )
 {
-	gpio_pin_config_t led_config = { kGPIO_DigitalOutput, 0 };
+	if ( NULL == pins[ num ].base )
+		return;
+	
+	gpio_pin_config_t led_config = { setting, 0 };
 
 	GPIO_PinInit( pins[ num ].base, pins[ num ].pin, &led_config );
 }
 
 void pin_toggle( int num )
 {
+	if ( NULL == pins[ num ].base )
+		return;
+
 	GPIO_PortToggle( pins[ num ].base, 1u << pins[ num ].pin );
 }
 
 void pin_write( int num, bool value )
 {
+	if ( NULL == pins[ num ].base )
+		return;
+
 	GPIO_PinWrite( pins[ num ].base, pins[ num ].pin, value );
-}
-
-void init_pins( void )
-{
-	uint8_t	pins[]	= { RED, GREEN, BLUE };
-
-	for ( int i = 0; i < sizeof( pins ); i++ )
-	{
-		init_pin( pins[ i ], PIN_OUTPUT );
-		pin_write( pins[ i ], false ); wait( 0.1 );
-		pin_write( pins[ i ], true  ); wait( 0.1 );
-	}
-	
-	init_pin( IBI_TRIGGER_OUTPUT, PIN_OUTPUT );	
-}
-
-volatile int target_led	= BLUE;
-
-void set_led_color0( float temp, float ref )
-{
-	if ( (ref + 2) < temp )
-	{
-		target_led	= RED;
-	}
-	else if ( (ref + 1) < temp )
-	{
-		target_led	= GREEN;
-	}
-	else
-	{
-		target_led	= BLUE;
-	}
-	pin_write( IBI_TRIGGER_OUTPUT, true );
-}
-
-void set_led_color( float temp, float ref )
-{
-	if ( (ref + 2) < temp )
-	{
-		pin_write( RED,   PIN_LED_ON  );
-		pin_write( GREEN, PIN_LED_OFF );
-		pin_write( BLUE,  PIN_LED_OFF );
-	}
-	else if ( (ref + 1) < temp )
-	{
-		pin_write( RED,   PIN_LED_OFF );
-		pin_write( GREEN, PIN_LED_ON  );
-		pin_write( BLUE,  PIN_LED_OFF );
-	}
-	else
-	{
-		pin_write( RED,   PIN_LED_OFF );
-		pin_write( GREEN, PIN_LED_OFF );
-		pin_write( BLUE,  PIN_LED_ON  );
-	}
-	
-	pin_write( IBI_TRIGGER_OUTPUT, true );
-}
-
-
-void all_led_on( void )
-{
-	all_led( PIN_LED_ON );
-}
-
-void all_led( bool v )
-{
-	pin_write( IBI_TRIGGER_OUTPUT, false );
-	pin_write( RED,   v );
-	pin_write( GREEN, v );
-	pin_write( BLUE,  v );
-}
-
-void pin_led_control( int v )
-{
-	if ( !(v % 2) )
-		all_led( PIN_LED_OFF );
-
-	if ( v % 2 )
-	pin_write( target_led, PIN_LED_ON );
-}
-
-
-void wait( float delayTime_sec )
-{
-	SDK_DelayAtLeastUs( (uint32_t)(delayTime_sec * 1000000.0), CLOCK_GetCoreSysClkFreq() );
 }

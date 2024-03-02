@@ -14,6 +14,9 @@
 #define	PIN_OUTPUT			kGPIO_DigitalOutput
 #define	PIN_INPUT			kGPIO_DigitalInput
 
+#define	DISABLED_GPIO		(GPIO_Type *)NULL
+#define	DISABLED_PIN		0xFF
+
 #define RED_GPIO			BOARD_LED_RED_GPIO
 #define GREEN_GPIO			BOARD_LED_GREEN_GPIO
 #define BLUE_GPIO			BOARD_LED_BLUE_GPIO
@@ -25,7 +28,7 @@
 #define D0_GPIO				BOARD_INITPINS_ARD_D0_GPIO
 #define D1_GPIO				BOARD_INITPINS_ARD_D1_GPIO
 #define D2_GPIO				BOARD_INITPINS_ARD_D2_GPIO
-#define D3_GPIO				BOARD_INITPINS_ARD_D0_GPIO	//	BLUE
+#define D3_GPIO				BOARD_INITPINS_ARD_D3_GPIO	//	BLUE
 #define D4_GPIO				BOARD_INITPINS_ARD_D4_GPIO
 #define D5_GPIO				BOARD_INITPINS_ARD_D5_GPIO	//	RED
 #define D6_GPIO				BOARD_INITPINS_ARD_D6_GPIO	//	GREEN
@@ -42,7 +45,7 @@
 #define D0_GPIO_PIN			BOARD_INITPINS_ARD_D0_GPIO_PIN
 #define D1_GPIO_PIN			BOARD_INITPINS_ARD_D1_GPIO_PIN
 #define D2_GPIO_PIN			BOARD_INITPINS_ARD_D2_GPIO_PIN
-#define D3_GPIO_PIN			BOARD_INITPINS_ARD_D0_GPIO_PIN
+#define D3_GPIO_PIN			BOARD_INITPINS_ARD_D3_GPIO_PIN
 #define D4_GPIO_PIN			BOARD_INITPINS_ARD_D4_GPIO_PIN
 #define D5_GPIO_PIN			BOARD_INITPINS_ARD_D5_GPIO_PIN
 #define D6_GPIO_PIN			BOARD_INITPINS_ARD_D6_GPIO_PIN
@@ -56,6 +59,16 @@
 #define D18_GPIO_PIN		BOARD_INITPINS_ARD_D18_GPIO_PIN
 #define D19_GPIO_PIN		BOARD_INITPINS_ARD_D19_GPIO_PIN
 
+/*
+ *	Following pins are disabled since the pins are assigned to other function
+ */
+#undef	BOARD_INITPINS_ARD_D3_GPIO
+#undef	BOARD_INITPINS_ARD_D3_GPIO_PIN
+#define	BOARD_INITPINS_ARD_D3_GPIO		DISABLED_GPIO
+#define	BOARD_INITPINS_ARD_D3_GPIO_PIN	DISABLED_PIN
+
+
+
 enum { D0, D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D18, D19 };
 
 #define	RED		D5
@@ -68,10 +81,3 @@ enum { D0, D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D18, D19 };
 void	init_pin( int num, int setting );
 void	pin_toggle( int num );
 void	pin_write( int num, bool value );
-
-void	init_pins( void );
-void	set_led_color( float temp, float ref );
-void	all_led( bool v );
-void	all_led_on( void );
-void pin_led_control( int v );
-void wait( float delayTime_sec );

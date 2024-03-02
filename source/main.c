@@ -21,10 +21,10 @@
 #include "fsl_clock.h"
 #include "fsl_reset.h"
 
-#include "i3c/i3c.h"
 #include "p3t1755.h"
-#include "led_control/pin.h"
-#include "led_control/pwm.h"
+#include "wait.h"
+#include "i3c/i3c.h"
+#include "led_control/led_control.h"
 
 //#define	HIGHER_SCL_FREQ
 
@@ -52,7 +52,7 @@ void		wait( float delayTime_sec );
 int main(void)
 {
 	init_MCU();
-	init_pins();
+	init_led();
 	init_i3c( EXAMPLE_I2C_FREQ, EXAMPLE_I3C_OD_FREQ, EXAMPLE_I3C_PP_FREQ );
 	
 	PRINTF("\r\nP3T1755 (Temperature sensor) I3C operation sample: getting temperature data and IBI\r\n");
@@ -70,9 +70,6 @@ int main(void)
 	float	temp;
 	uint8_t	ibi_addr;
 	
-//	set_IBI_callback( all_led_on );
-	pwm_start();
-
 	while ( true )
 	{
 		if ( (ibi_addr	= i3c_check_IBI()) )
@@ -80,7 +77,7 @@ int main(void)
 
 		temp	= read_temp( P3T1755_ADDR_I3C, P3T1755_REG_Temp );
 		PRINTF( "Temperature: %8.4f˚C\r\n", temp );
-		set_led_color( temp, ref_temp );
+		led_set_color( temp, ref_temp );
 		wait( 1 );
 	}
 }
