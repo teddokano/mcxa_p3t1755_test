@@ -14,6 +14,9 @@
 
 #include "fsl_device_registers.h"
 #include "fsl_inputmux.h"
+
+#include "fsl_utick.h"
+
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -39,6 +42,13 @@
 /*******************************************************************************
  * Code
  ******************************************************************************/
+
+static void timer_callback(void)
+{
+	pwm_update();
+}
+
+
 static void PWM_DRV_Init3PhPwm(void)
 {
 	uint16_t deadTimeVal;
@@ -175,6 +185,8 @@ int pwm_start(void)
 	/* Start the PWM generation from Submodules 0, 1 and 2 */
 	PWM_StartTimer(BOARD_PWM_BASEADDR, kPWM_Control_Module_0 | kPWM_Control_Module_1 | kPWM_Control_Module_2);
 
+	UTICK_SetTick( UTICK0, kUTICK_Repeat, 10000 - 1, timer_callback );
+
 }
 
 
@@ -219,3 +231,4 @@ void pwm_update( void )
 	count++;
 
 }
+

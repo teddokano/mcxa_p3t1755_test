@@ -49,15 +49,6 @@ uint16_t	celsius2short( float v );
 uint16_t	swap_bytes( uint16_t v );
 void		wait( float delayTime_sec );
 
-static volatile int		timer_count	= 0;
-
-static void timer_callback(void)
-{
-//	pin_led_control( timer_count );
-	pwm_update();
-	timer_count++;
-}
-
 int main(void)
 {
 	init_MCU();
@@ -79,13 +70,8 @@ int main(void)
 	float	temp;
 	uint8_t	ibi_addr;
 	
-	set_IBI_callback( all_led_on );
-
+//	set_IBI_callback( all_led_on );
 	pwm_start();
-	UTICK_SetTick( UTICK0, kUTICK_Repeat, 10000 - 1, timer_callback );
-
-//	pwm_test();
-
 
 	while ( true )
 	{

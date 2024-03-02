@@ -66,7 +66,7 @@ void init_pins( void )
 
 volatile int target_led	= BLUE;
 
-void set_led_color( float temp, float ref )
+void set_led_color0( float temp, float ref )
 {
 	if ( (ref + 2) < temp )
 	{
@@ -83,7 +83,7 @@ void set_led_color( float temp, float ref )
 	pin_write( IBI_TRIGGER_OUTPUT, true );
 }
 
-void set_led_color2( float temp, float ref )
+void set_led_color( float temp, float ref )
 {
 	if ( (ref + 2) < temp )
 	{
