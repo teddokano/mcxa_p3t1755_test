@@ -10,9 +10,6 @@
 #include	"mcu.h"
 #include	"pin.h"
 
-
-#include	"mcu.h"
-
 typedef	struct	_gpio_pin {
 	GPIO_Type	*base;
 	uint32_t	pin;
@@ -69,6 +66,9 @@ void pin_write( int num, bool value )
 	GPIO_PinWrite( pins[ num ].base, pins[ num ].pin, value );
 }
 
+
+#include	"mcu.h"
+
 void pin_test( void )
 {
 	for ( int i = 0; i < sizeof( pins ) / sizeof( gpio_pin ); i++ )
@@ -79,7 +79,7 @@ void pin_test( void )
 
 	for ( int i = 0; i < sizeof( pins ) / sizeof( gpio_pin ); i++ )
 	{
-		for ( int j = 0; j < (i -15); j++ )
+		for ( int j = 0; j < (i + 1); j++ )
 		{
 			pin_write( i, true );
 			wait( 0.01 );

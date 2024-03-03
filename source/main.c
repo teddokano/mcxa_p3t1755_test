@@ -9,6 +9,8 @@
  *    "lpcxpresso860max_i3c_master_read_sensor_icm42688p" from SDK_2.15.000_LPCXpresso860MAX
  */
 
+#include "config.h"
+
 #include "fsl_debug_console.h"
 
 #include "p3t1755.h"
@@ -16,12 +18,6 @@
 #include "i3c/i3c.h"
 #include "demo/led_control.h"
 #include "demo/demo.h"
-
-
-
-
-
-#include "demo/pin.h"
 
 //#define	HIGHER_SCL_FREQ
 
@@ -48,7 +44,6 @@ void		wait( float delayTime_sec );
 int main(void)
 {
 	init_mcu();
-	pin_test();
 	init_demo();
 	init_i3c( EXAMPLE_I2C_FREQ, EXAMPLE_I3C_OD_FREQ, EXAMPLE_I3C_PP_FREQ );	
 	PRINTF("\r\nP3T1755 (Temperature sensor) I3C operation sample: getting temperature data and IBI\r\n");

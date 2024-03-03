@@ -9,8 +9,6 @@
 #include "clock_config.h"
 #include "board.h"
 
-#define	IBI_TRIGGER_OUTPUT	D2
-
 #define	PIN_OUTPUT			kGPIO_DigitalOutput
 #define	PIN_INPUT			kGPIO_DigitalInput
 

@@ -5,6 +5,8 @@
  *
  */
 
+#include	"config.h"
+
 #include	"fsl_utick.h"
 
 #include	"mcu.h"
@@ -95,7 +97,6 @@ void led_set_color2( float temp, float ref )
 
 void led_all( bool v )
 {
-	pin_write( IBI_TRIGGER_OUTPUT, false );
 	pin_write( RED,   v );
 	pin_write( GREEN, v );
 	pin_write( BLUE,  v );
