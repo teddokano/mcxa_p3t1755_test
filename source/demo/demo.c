@@ -20,5 +20,3 @@ void demo( float temp, float *ref_temp_ptr, float (*func_ptr)(uint8_t,uint8_t) )
 {
 	led_set_color( temp, *ref_temp_ptr );
 }
-
-
