@@ -10,7 +10,7 @@
 #include	"demo/led_control.h"
 #include	"p3t1755.h"
 
-#define	LENGTH		10
+#define	LENGTH		60
 #define	THRESHOLD	1.0
 
 static float	samples[ LENGTH ];
@@ -32,16 +32,26 @@ void demo( float temp, float *ref_temp_ptr, float (*func_ptr)(uint8_t,uint8_t) )
 	float				tmp;
 	float				compare;
 	uint32_t			lim;
-
+	int					max_index	= 0;
+	int					min_index	= 0;
+	int					local_index;
+	
 	led_set_color( temp, *ref_temp_ptr );
 	
 	samples[ index++ % LENGTH ]	= temp;
 
 	lim	= (index < LENGTH) ? index : LENGTH;
 	
+	if (lim < LENGTH)
+		return;
+	
 	for ( int i = 0; i < lim; i++ )
 	{
-		tmp	 = samples[ i ];
+		tmp	 		 = samples[ i ];
+		local_index	 = (i + (index - 1)) % LENGTH;
+		
+		max_index	 = (max < tmp) ? local_index : max_index;
+		min_index	 = (tmp < min) ? local_index : min_index;
 
 		max	 = (max < tmp) ? tmp : max;
 		min	 = (tmp < min) ? tmp : min;
@@ -49,15 +59,16 @@ void demo( float temp, float *ref_temp_ptr, float (*func_ptr)(uint8_t,uint8_t) )
 	}
 	
 	avg	/= lim;
-	
-	compare	= min;
 
-	//if ( ((*ref_temp_ptr - THRESHOLD) < avg) && (avg < (*ref_temp_ptr + THRESHOLD)) )
-	if ( ((*ref_temp_ptr - THRESHOLD) < compare) && (compare < (*ref_temp_ptr + THRESHOLD)) )
+	if ( ((*ref_temp_ptr - THRESHOLD) < min) && (min < (*ref_temp_ptr + THRESHOLD)) )
 		return;
 
-	*ref_temp_ptr	= avg;
-	PRINTF( "Minimum temperature for last %d samples are changed\r\n", LENGTH );
+	if ( 2.0 < (max - min) )
+		*ref_temp_ptr	= (max_index < min_index) ? min : max;
+	else
+		*ref_temp_ptr	= min;		
+
+	PRINTF( "Recent temperature for last %d samples are changed from previous one. Changed to %8.4f˚C\r\n", lim, *ref_temp_ptr );
 	
 	func_ptr( P3T1755_ADDR_I3C, P3T1755_CONFIG_VALUE );;
 }
