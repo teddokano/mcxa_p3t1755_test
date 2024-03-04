@@ -6,3 +6,7 @@
  */
 
 #define	IBI_TRIGGER_OUTPUT	A2
+
+#define	ARDUINO_SHIELD		
+
+
