@@ -315,29 +315,10 @@ void BOARD_InitBootPins(void);
 /*! @name PORT1_9 (number 3), ARD_D19
   @{ */
 
-/* Symbols to be used with GPIO driver */
-#define BOARD_INITPINS_ARD_D19_GPIO GPIO1               /*!<@brief GPIO peripheral base pointer */
-#define BOARD_INITPINS_ARD_D19_GPIO_PIN 9U              /*!<@brief GPIO pin number */
-#define BOARD_INITPINS_ARD_D19_GPIO_PIN_MASK (1U << 9U) /*!<@brief GPIO pin mask */
-
 /* Symbols to be used with PORT driver */
 #define BOARD_INITPINS_ARD_D19_PORT PORT1               /*!<@brief PORT peripheral base pointer */
 #define BOARD_INITPINS_ARD_D19_PIN 9U                   /*!<@brief PORT pin number */
 #define BOARD_INITPINS_ARD_D19_PIN_MASK (1U << 9U)      /*!<@brief PORT pin mask */
-                                                        /* @} */
-
-/*! @name PORT1_8 (number 2), ARD_D18
-  @{ */
-
-/* Symbols to be used with GPIO driver */
-#define BOARD_INITPINS_ARD_D18_GPIO GPIO1               /*!<@brief GPIO peripheral base pointer */
-#define BOARD_INITPINS_ARD_D18_GPIO_PIN 8U              /*!<@brief GPIO pin number */
-#define BOARD_INITPINS_ARD_D18_GPIO_PIN_MASK (1U << 8U) /*!<@brief GPIO pin mask */
-
-/* Symbols to be used with PORT driver */
-#define BOARD_INITPINS_ARD_D18_PORT PORT1               /*!<@brief PORT peripheral base pointer */
-#define BOARD_INITPINS_ARD_D18_PIN 8U                   /*!<@brief PORT pin number */
-#define BOARD_INITPINS_ARD_D18_PIN_MASK (1U << 8U)      /*!<@brief PORT pin mask */
                                                         /* @} */
 
 /*!

@@ -7,6 +7,9 @@
 
 #define	IBI_TRIGGER_OUTPUT	A2
 
-#define	ARDUINO_SHIELD		
-
+#ifdef ARDUINO_SHIELD
+#define TARGET_BOARD		"Arduino shield board"
+#else
+#define TARGET_BOARD		"On board P3T7155"
+#endif
 

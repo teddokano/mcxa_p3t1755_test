@@ -5,9 +5,11 @@
  *
  */
 
-#include "pin_mux.h"
-#include "clock_config.h"
-#include "board.h"
+#include	"config.h"
+
+#include	"pin_mux.h"
+#include	"clock_config.h"
+#include	"board.h"
 
 #define	PIN_OUTPUT			kGPIO_DigitalOutput
 #define	PIN_INPUT			kGPIO_DigitalInput
@@ -78,6 +80,8 @@
 #define	BOARD_INITPINS_ARD_D3_GPIO		DISABLED_GPIO
 #define	BOARD_INITPINS_ARD_D3_GPIO_PIN	DISABLED_PIN
 
+#ifdef ARDUINO_SHIELD
+
 #undef	BOARD_INITPINS_ARD_D18_GPIO
 #undef	BOARD_INITPINS_ARD_D18_GPIO_PIN
 #define	BOARD_INITPINS_ARD_D18_GPIO		DISABLED_GPIO
@@ -87,6 +91,8 @@
 #undef	BOARD_INITPINS_ARD_D19_GPIO_PIN
 #define	BOARD_INITPINS_ARD_D19_GPIO		DISABLED_GPIO
 #define	BOARD_INITPINS_ARD_D19_GPIO_PIN	DISABLED_PIN
+
+#endif // ARDUINO_SHIELD
 
 enum { 	D0, D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D18, D19,
 		A0, A1, A2, A3, A4, A5 };

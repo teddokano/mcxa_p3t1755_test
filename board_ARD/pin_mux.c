@@ -93,10 +93,8 @@ BOARD_InitPins:
   - {pin_num: '40', peripheral: FlexPWM0, signal: 'A, 2', pin_signal: P3_10/TRIG_IN5/LPSPI1_SCK/LPUART1_RTS_B/CT1_MAT0/PWM0_A2}
   - {pin_num: '46', peripheral: FlexPWM0, signal: 'A, 0', pin_signal: P3_0/WUU0_IN22/TRIG_IN0/CT_INP16/PWM0_A0}
   - {pin_num: '4', peripheral: GPIO1, signal: 'GPIO, 10', pin_signal: P1_10/LPUART1_RTS_B/LPI2C0_SDAS/CT2_MAT0/ADC0_A8}
-  - {pin_num: '55', peripheral: I3C0, signal: SCL, pin_signal: P0_17/LPI2C0_SCL/LPSPI0_PCS3/CT0_MAT1/UTICK_CAP3/I3C0_SCL}
-  - {pin_num: '54', peripheral: I3C0, signal: SDA, pin_signal: P0_16/WUU0_IN2/LPI2C0_SDA/LPSPI0_PCS2/CT0_MAT0/UTICK_CAP2/I3C0_SDA}
-  - {pin_num: '3', peripheral: GPIO1, signal: 'GPIO, 9', pin_signal: P1_9/LPUART1_TXD/LPI2C0_SCL/CT_INP9/CT0_MAT3/I3C0_SCL}
-  - {pin_num: '2', peripheral: GPIO1, signal: 'GPIO, 8', pin_signal: P1_8/WUU0_IN10/LPUART1_RXD/LPI2C0_SDA/CT_INP8/CT0_MAT2/I3C0_SDA}
+  - {pin_num: '2', peripheral: I3C0, signal: SDA, pin_signal: P1_8/WUU0_IN10/LPUART1_RXD/LPI2C0_SDA/CT_INP8/CT0_MAT2/I3C0_SDA, identifier: ''}
+  - {pin_num: '3', peripheral: I3C0, signal: SCL, pin_signal: P1_9/LPUART1_TXD/LPI2C0_SCL/CT_INP9/CT0_MAT3/I3C0_SCL}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 /* clang-format on */
@@ -117,18 +115,18 @@ void BOARD_InitPins(void)
     CLOCK_EnableClock(kCLOCK_GatePORT2);
     /* Write to PORT3: Peripheral clock is enabled */
     CLOCK_EnableClock(kCLOCK_GatePORT3);
-    /* I3C0 peripheral is released from reset */
-    RESET_ReleasePeripheralReset(kI3C0_RST_SHIFT_RSTn);
-    /* PORT0 peripheral is released from reset */
-    RESET_ReleasePeripheralReset(kPORT0_RST_SHIFT_RSTn);
     /* LPUART0 peripheral is released from reset */
     RESET_ReleasePeripheralReset(kLPUART0_RST_SHIFT_RSTn);
+    /* PORT0 peripheral is released from reset */
+    RESET_ReleasePeripheralReset(kPORT0_RST_SHIFT_RSTn);
     /* GPIO0 peripheral is released from reset */
     RESET_ReleasePeripheralReset(kGPIO0_RST_SHIFT_RSTn);
     /* GPIO1 peripheral is released from reset */
     RESET_ReleasePeripheralReset(kGPIO1_RST_SHIFT_RSTn);
     /* PORT1 peripheral is released from reset */
     RESET_ReleasePeripheralReset(kPORT1_RST_SHIFT_RSTn);
+    /* I3C0 peripheral is released from reset */
+    RESET_ReleasePeripheralReset(kI3C0_RST_SHIFT_RSTn);
     /* GPIO2 peripheral is released from reset */
     RESET_ReleasePeripheralReset(kGPIO2_RST_SHIFT_RSTn);
     /* PORT2 peripheral is released from reset */
@@ -139,26 +137,6 @@ void BOARD_InitPins(void)
     RESET_ReleasePeripheralReset(kPORT3_RST_SHIFT_RSTn);
     /* GPIO3 peripheral is released from reset */
     RESET_ReleasePeripheralReset(kGPIO3_RST_SHIFT_RSTn);
-
-    /* PORT0_16 (pin 54) is configured as I3C0_SDA */
-    PORT_SetPinMux(PORT0, 16U, kPORT_MuxAlt10);
-
-    PORT0->PCR[16] = ((PORT0->PCR[16] &
-                       /* Mask bits to zero which are setting */
-                       (~(PORT_PCR_IBE_MASK)))
-
-                      /* Input Buffer Enable: Enables. */
-                      | PORT_PCR_IBE(PCR_IBE_ibe1));
-
-    /* PORT0_17 (pin 55) is configured as I3C0_SCL */
-    PORT_SetPinMux(PORT0, 17U, kPORT_MuxAlt10);
-
-    PORT0->PCR[17] = ((PORT0->PCR[17] &
-                       /* Mask bits to zero which are setting */
-                       (~(PORT_PCR_IBE_MASK)))
-
-                      /* Input Buffer Enable: Enables. */
-                      | PORT_PCR_IBE(PCR_IBE_ibe1));
 
     const port_pin_config_t port0_2_pin51_config = {/* Internal pull-up resistor is enabled */
                                                     kPORT_PullUp,
@@ -295,8 +273,8 @@ void BOARD_InitPins(void)
                      /* Input Buffer Enable: Enables. */
                      | PORT_PCR_IBE(PCR_IBE_ibe1));
 
-    /* PORT1_8 (pin 2) is configured as P1_8 */
-    PORT_SetPinMux(BOARD_INITPINS_ARD_D18_PORT, BOARD_INITPINS_ARD_D18_PIN, kPORT_MuxAlt0);
+    /* PORT1_8 (pin 2) is configured as I3C0_SDA */
+    PORT_SetPinMux(PORT1, 8U, kPORT_MuxAlt10);
 
     PORT1->PCR[8] = ((PORT1->PCR[8] &
                       /* Mask bits to zero which are setting */
@@ -305,8 +283,8 @@ void BOARD_InitPins(void)
                      /* Input Buffer Enable: Enables. */
                      | PORT_PCR_IBE(PCR_IBE_ibe1));
 
-    /* PORT1_9 (pin 3) is configured as P1_9 */
-    PORT_SetPinMux(BOARD_INITPINS_ARD_D19_PORT, BOARD_INITPINS_ARD_D19_PIN, kPORT_MuxAlt0);
+    /* PORT1_9 (pin 3) is configured as I3C0_SCL */
+    PORT_SetPinMux(BOARD_INITPINS_ARD_D19_PORT, BOARD_INITPINS_ARD_D19_PIN, kPORT_MuxAlt10);
 
     PORT1->PCR[9] = ((PORT1->PCR[9] &
                       /* Mask bits to zero which are setting */

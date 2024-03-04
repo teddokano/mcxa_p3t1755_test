@@ -46,7 +46,8 @@ int main(void)
 	init_mcu();
 	init_demo();
 	init_i3c( EXAMPLE_I2C_FREQ, EXAMPLE_I3C_OD_FREQ, EXAMPLE_I3C_PP_FREQ );	
-	PRINTF("\r\nP3T1755 (Temperature sensor) I3C operation sample: getting temperature data and IBI\r\n");
+	PRINTF( "\r\nP3T1755 (Temperature sensor) I3C operation sample: getting temperature data and IBI\r\n");
+	PRINTF( "  Code had been build for %s\r\n\r\n", TARGET_BOARD );
 	
 	DAA_set_dynamic_ddress_from_static_ddress( P3T1755_ADDR_I3C, P3T1755_ADDR_I2C );
 	

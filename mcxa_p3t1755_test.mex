@@ -145,12 +145,10 @@
                   <pin peripheral="FlexPWM0" signal="A, 2" pin_num="40" pin_signal="P3_10/TRIG_IN5/LPSPI1_SCK/LPUART1_RTS_B/CT1_MAT0/PWM0_A2"/>
                   <pin peripheral="FlexPWM0" signal="A, 0" pin_num="46" pin_signal="P3_0/WUU0_IN22/TRIG_IN0/CT_INP16/PWM0_A0"/>
                   <pin peripheral="GPIO1" signal="GPIO, 10" pin_num="4" pin_signal="P1_10/LPUART1_RTS_B/LPI2C0_SDAS/CT2_MAT0/ADC0_A8"/>
-                  <pin peripheral="I3C0" signal="SDA" pin_num="2" pin_signal="P1_8/WUU0_IN10/LPUART1_RXD/LPI2C0_SDA/CT_INP8/CT0_MAT2/I3C0_SDA">
-                     <pin_features>
-                        <pin_feature name="identifier" value=""/>
-                     </pin_features>
-                  </pin>
-                  <pin peripheral="I3C0" signal="SCL" pin_num="3" pin_signal="P1_9/LPUART1_TXD/LPI2C0_SCL/CT_INP9/CT0_MAT3/I3C0_SCL"/>
+                  <pin peripheral="I3C0" signal="SCL" pin_num="55" pin_signal="P0_17/LPI2C0_SCL/LPSPI0_PCS3/CT0_MAT1/UTICK_CAP3/I3C0_SCL"/>
+                  <pin peripheral="I3C0" signal="SDA" pin_num="54" pin_signal="P0_16/WUU0_IN2/LPI2C0_SDA/LPSPI0_PCS2/CT0_MAT0/UTICK_CAP2/I3C0_SDA"/>
+                  <pin peripheral="GPIO1" signal="GPIO, 9" pin_num="3" pin_signal="P1_9/LPUART1_TXD/LPI2C0_SCL/CT_INP9/CT0_MAT3/I3C0_SCL"/>
+                  <pin peripheral="GPIO1" signal="GPIO, 8" pin_num="2" pin_signal="P1_8/WUU0_IN10/LPUART1_RXD/LPI2C0_SDA/CT_INP8/CT0_MAT2/I3C0_SDA"/>
                </pins>
             </function>
          </functions_list>
